@@ -1,0 +1,164 @@
+//////////////////////////////////////
+/////////
+/////////	Pneumatic valves handling
+/////////
+//////////////////////////////////////
+
+// Expanding knives rolls
+IF 	bBottomAxisAir_HMI THEN
+	bBottomAxisAir								:=TRUE;
+ELSE
+	bBottomAxisAir								:=FALSE;
+END_IF
+
+IF 	bUpperAxisAir_HMI THEN
+	bUpperAxisAir								:=TRUE;
+ELSE
+	bUpperAxisAir								:=FALSE;
+END_IF
+// Moving Upper roll right 
+IF 	bUpperAxisRightMove_HMI THEN
+	bUpperAxisRightMove							:=TRUE;
+ELSE
+	bUpperAxisRightMove							:=FALSE;
+END_IF
+// Moving Upper roll up 
+IF 	bUpperAxisUpMove_HMI THEN
+	bUpperAxisUpMove							:=TRUE;
+ELSE
+	bUpperAxisUpMove							:=FALSE;
+END_IF
+// Grippers
+IF NOT bGriperTestProcedure THEN
+	IF 	bBottomAxisGripper_HMI THEN
+		bBottomAxisGripper							:=TRUE;
+	ELSE
+		bBottomAxisGripper							:=FALSE;
+	END_IF
+
+	IF 	bUpperAxisGripper_HMI AND NOT bGriperTestProcedure THEN
+		bUpperAxisGripper							:=TRUE;
+	ELSE
+		bUpperAxisGripper							:=FALSE;
+	END_IF
+END_IF
+	
+IF bMuscle_HMI THEN
+	bMuscle										:=TRUE;
+ELSE
+	bMuscle										:=FALSE;
+END_IF
+
+(*
+////////////////////////////////////////
+////////
+////////		Jog handling Upper Axis
+////////
+////////////////////////////////////////					
+
+arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Vel							:=rJogVelocity;
+arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Accel							:=rJogAcceleration;
+arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Enable						:=bUpperAxisEnable;
+//arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position						:=rUpperAxisJogPosition;
+
+IF arAxisStatus_gb[UpperAxis.AxisNo].SetupMode.EnableAck THEN
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.JogMinus					:=bUpperAxisJogMinus;
+	
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.JogPlus					:=bUpperAxisJogPlus;
+	
+
+	IF bUpperAxisJogMove AND NOT bUpperAxisJogMoveProcedure THEN
+		bUpperAxisJogMoveProcedure										:=TRUE;
+		uiUpperAxisJogMove												:=10;
+	END_IF
+		
+ELSE
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.JogMinus					:=FALSE;
+	
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.JogPlus					:=FALSE;
+END_IF
+////////////////////////////////////////
+////////
+////////		Jog handling Bottom Axis
+////////
+////////////////////////////////////////
+
+arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Vel							:=rJogVelocity;
+arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Accel						:=rJogAcceleration;
+arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Enable						:=bBottomAxisEnable;
+
+IF arAxisStatus_gb[BottomAxis.AxisNo].SetupMode.EnableAck THEN
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.JogMinus					:=bBottomAxisJogMinus;
+	
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.JogPlus					:=bBottomAxisJogPlus;
+	
+	IF bBottomAxisJogMove AND NOT bBottomAxisJogMoveProcedure THEN
+		bBottomAxisJogMoveProcedure										:=TRUE;
+		uiBottomAxisJogMove												:=10;
+	END_IF
+	
+ELSE
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.JogMinus					:=FALSE;
+	
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.JogPlus					:=FALSE;
+END_IF
+
+IF bUpperAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
+	CASE uiUpperAxisJogMove OF
+		
+		10:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 				:= rUpperAxisJogPosition;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 				:= rJogVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 			:= rJogAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en				:= ModePosAbs;
+				IF (arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone) THEN
+					uiUpperAxisJogMove												:=20;
+				END_IF
+		
+		20: 
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 			:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperAxisJogMove										:= 30;
+				END_IF
+		
+		30: 
+			
+			bUpperAxisJogMoveProcedure										:=FALSE;
+			uiUpperAxisJogMove												:=0;
+	
+	END_CASE
+END_IF
+
+IF bBottomAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
+	CASE uiBottomAxisJogMove OF
+		
+		10:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 				:= rBottomAxisJogPosition;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 				:= rJogVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 			:= rJogAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en				:= ModePosAbs;
+				IF (arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone) THEN
+					uiBottomAxisJogMove												:=20;
+				END_IF
+		
+		20: 
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 		:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 				:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomAxisJogMove										:= 30;
+				END_IF
+		
+		30: 
+			
+			bBottomAxisJogMoveProcedure										:=FALSE;
+			uiBottomAxisJogMove												:=0;
+	
+	END_CASE
+END_IF
+
+
+*)
+
+
+
