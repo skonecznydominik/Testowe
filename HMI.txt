@@ -1,0 +1,156 @@
+//Operating Mode selectors
+	bKnivesAutoMode							: BOOL;
+	bKnivesManualMode						: BOOL;
+	bKnivesHomingMode						: BOOL;
+	bKnivesHomingKnivesMode					: BOOL;
+	
+	//Error and diagnostic
+	bGlobalError							: BOOL;
+	//bPLC_Error								: BOOL;
+	bUpperAxisError							: BOOL;
+	bBottmAxisError							: BOOL;
+	rBottomAxisActualPosition				: REAL;
+	rUpperAxisActualPosition				: REAL;	
+	
+	//Manual Mode vars
+	bUpperAxisEnable						: BOOL;
+	bUpperAxisJogPlus						: BOOL;
+	bUpperAxisJogMinus						: BOOL;
+	
+	bBottomAxisEnable						: BOOL;
+	bBottomAxisJogPlus						: BOOL;
+	bBottomAxisJogMinus						: BOOL;
+	
+	bBottomAxisAir_HMI						: BOOL;
+	bUpperAxisAir_HMI						: BOOL;
+	bUpperAxisRightMove_HMI					: BOOL;
+	bUpperAxisUpMove_HMI					: BOOL;
+	bBottomAxisGripper_HMI					: BOOL;
+	bUpperAxisGripper_HMI					: BOOL;
+	
+	
+	//Axes Homing Mode vars
+	bUpperAxisHomingStart					: BOOL;
+	bUpperAxisPositiveStopStart				: BOOL;
+	rUpperAxisReferenceDistance				: REAL;
+	bUpperAxisHomingAck						: BOOL;
+	
+	
+	bBottomAxisHomingStart					: BOOL;
+	bBottomAxisPositiveStopStart			: BOOL;
+	rBottomAxisReferenceDistance			: REAL;
+	bBottomAxisHomingAck					: BOOL;
+	
+
+	// Knives Homing Mode vars
+	bUpperKnivesHomingStart					: BOOL;
+	bUpperKnivesHomingProcedure				: BOOL;
+	bUpperKnivesHomingStop					: BOOL;
+	rUpperAxisKnivesHomingLeftSafePosition		: REAL:=-152;
+	rUpperAxisKnivesHomingLeftHomePosition		: REAL:=140;
+	rUpperAxisKnivesHomingRightSafePosition		: REAL:=509;	//503.5	//505
+	rUpperAxisKnivesHomingRightHomePosition		: REAL:=250;
+	
+	bBottomKnivesHomingStart				: BOOL;
+	bBottomKnivesHomingProcedure			: BOOL;
+	bBottomKnivesHomingStop					: BOOL;
+	rBottomAxisKnivesHomingLeftSafePosition		: REAL:=-152;
+	rBottomAxisKnivesHomingLeftHomePosition		: REAL:=140;
+	rBottomAxisKnivesHomingRightSafePosition	: REAL:=515;	//499
+	rBottomAxisKnivesHomingRightHomePosition	: REAL:=250;
+	
+	
+	//AUTO MODE VARS	
+	bUpperKnivesAutoStart					: BOOL;
+	bUpperKnivesAutoStop					: BOOL;
+	bUpperKnivesAutoProcedure				: BOOL;
+	
+	bBottomKnivesAutoStart					: BOOL;
+	bBottomKnivesAutoStop					: BOOL;
+	bBottomKnivesAutoProcedure				: BOOL;
+	
+	
+	(*//	RECIPE VARS
+	rBaseDistance							: REAL;
+	iLabelsNumber							: INT;
+	rLabelsDistance							: REAL;
+	bRightKnifeActive						: BOOL;
+	bLeftKnifeActive						: BOOL;*)
+	
+	
+	bTrybDemoStart							: BOOL;
+	bTrybDemoProcedure						: BOOL;
+	bTrybDemoStop							: BOOL;
+	bTrybDemoStartStop						: BOOL;
+	bGoToShop								: BOOL;
+	bGoToShopProcedure						: BOOL;
+	bDemoCycle								: BOOL;
+	
+	
+	//	CLEAN SHOP	
+	bUpperKnivesCleanShopStart				: BOOL;
+	bUpperKnivesCleanShopProcedure			: BOOL;
+	bUpperKnivesCleanShopStop				: BOOL;
+	bUpperKnivesInCleanShop					: BOOL;
+	
+	//	NEW HOMING
+	bBottomKnivesNewHomingStart				: BOOL;
+	bBottomKnivesNewHomingProcedure			: BOOL;
+	bBottomKnivesNewHomingStop				: BOOL;
+	bBottomKnivesNewHomed					: BOOL;
+	
+	bUpperKnivesNewHomingStart				: BOOL;
+	bUpperKnivesNewHomingProcedure			: BOOL;
+	bUpperKnivesNewHomed					: BOOL;
+	bUpperKnivesNewHomingStop				: BOOL;
+	
+	//	RE HOMING
+	bBottomKnivesReHomingStart				: BOOL;
+	bBottomKnivesReHomingProcedure			: BOOL;
+	bBottomKnivesReHomed					: BOOL;
+	bBottomKnivesReHomingStop				: BOOL;
+	
+	bUpperKnivesReHomingStart				: BOOL;
+	bUpperKnivesReHomingProcedure			: BOOL;
+	bUpperKnivesReHomed						: BOOL;
+	bUpperKnivesReHomingStop				: BOOL;
+
+	bTrybDemoCyclicStart					: BOOL;
+	bTrybDemoCyclicProcedure				: BOOL;
+	bTrybDemoCyclicStop						: BOOL;
+	
+	bBottomKnivesCleanShopStart				: BOOL;
+	bBottomKnivesCleanShopProcedure			: BOOL;
+	bBottomKnivesCleanShopStop				: BOOL;
+	bBottomKnivesInCleanShop				: BOOL;
+	
+	rUpperAxisJogPosition					: REAL;
+	bUpperAxisJogMove						: BOOL;
+	bUpperAxisJogMoveProcedure				: BOOL;
+	bBottomAxisJogMove						: BOOL;
+	bBottomAxisJogMoveProcedure				: BOOL;
+	rBottomAxisJogPosition					: REAL;
+	
+	bOdstawDostawNoze						: BOOL;
+	bKrokAutoKrok42							: BOOL;
+	
+	//bResetButton							: BOOL;
+	bGoToShopStop							: BOOL;
+	bMuscle_HMI								: BOOL;
+	bSupportKnifeActive						: BOOL;
+	bSupportKnifeActive_Right				: BOOL;
+
+	bUpperGriperBlocked						: BOOL;
+	bBottomGriperBlocked					: BOOL;
+	bGriperTest								: BOOL;
+	bGriperTestProcedure					: BOOL;
+	bStopMoveNewHommingNeed					: BOOL;
+	
+	rBottomSaveSensorPosition1				: REAL;
+	rBottomSaveSensorPosition2				: REAL;
+	rUpperSaveSensorPosition1				: REAL;
+	rUpperSaveSensorPosition2				: REAL;
+	bResetSavePosition						: BOOL;
+	bUpperSaveReferencePosition				: BOOL;
+	bBottomSaveReferencePosition			: BOOL;
+	bHommingSensorWindow					: BOOL;
