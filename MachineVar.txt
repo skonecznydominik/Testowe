@@ -1,0 +1,63 @@
+MachineState							: MACHINE_MODE;
+	rJogAcceleration						: REAL:=1000;
+	
+	rHomingAcceleration						: REAL:=1000;
+	
+	rAutorAcceleration						: REAL:=400;		
+	fbResetLampBlink						: BLINK;
+	
+	fbUpperAxisSetTorque					: MB_WriteRealParameter;
+	rUpperAxisTorqueCmd						: REAL:=100;
+	fbBottomAxisSetTorque					: MB_WriteRealParameter;
+	rBottomAxisTorqueCmd					: REAL:=100;
+	
+	fbUpperAxisCommandBlock					: MB_Command;
+	fbUpperAxisSetReferenceDistance			: MB_WriteRealParameter;
+	fbUpperAxisReadReferenceDistance		: MB_ReadRealParameter;
+	
+	fbBottomAxisCommandBlock				: MB_Command;
+	fbBottomAxisSetReferenceDistance		: MB_WriteRealParameter;
+	fbBottomAxisReadReferenceDistance		: MB_ReadRealParameter;
+	
+	
+	
+	rKnivesHomingAcceleration				: REAL:= 500;
+	uiUpperKnivesHomingStepCounter			: UINT;
+	uiBottomKnivesHomingStepCounter			: UINT;
+	fbUpperKnivesHomingDleay				: TON;
+	fbBottomKnivesHomingDleay				: TON;
+	iUpperHomingKnivesCounter				: INT:=10;
+	iBottomHomingKnivesCounter				: INT:=10;
+	tValveDelayTime							: TIME:=T#500MS;
+
+	
+	iShopPosCalcCounter						: INT:=1;
+	
+	
+	//	Auto Vars
+	uiUpperKnivesAutoStepCounter			: UINT;
+	uiBottomKnivesAutoStepCounter			: UINT;	
+	
+	iUpperKnivesAutoPosCalcCounter			: INT:=1;
+	iBottomKnivesAutoPosCalcCounter			: INT:=1;
+	
+	uiTrybGotoShopCounter					: UINT;
+	uiTrybDemoStepCounter					: UINT;
+	fbTrybDemoDleay							: TON;
+	uiUpperKnivesCleanShopStepCounter		: UINT;
+	uiBottomKnivesNewHomingStepCounter		: UINT;
+	uiBottomKnivesReHomingStepCounter		: UINT;
+	uiUpperKnivesNewHomingStepCounter		: UINT;
+	uiUpperKnivesReHomingStepCounter		: UINT;
+	uiTrybDemoCyclicStepCounter				: UINT;
+	uiBottomKnivesCleanShopStepCounter		: UINT;
+	uiUpperAxisJogMove						: UINT;
+	uiBottomAxisJogMove						: UINT;
+	fbUpperSafetyTimer						: TON;
+	fbBottomSafetyTimer						: TON;
+	tValveSafetyTime						: TIME:=T#6000MS;
+	
+	uiGriperTest							: INT;
+	fbGriperTestDleay						: TON;
+	tValveDelayGripperTest					: TIME:=T#1000MS;
+	fbRTrigGripperTest						: R_TRIG;
