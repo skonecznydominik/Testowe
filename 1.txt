@@ -2,12 +2,12 @@
 //UPPPER KNIVES
 //////////////////////
 
-IF bUpperKnivesAutoStart AND NOT bUpperKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+IF bUpperKnivesAutoStart AND NOT bUpperKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 	bUpperKnivesAutoProcedure										:= TRUE;
 	bUpperKnivesReHomingStop										:= FALSE;
 	bUpperKnivesAutoStop											:= FALSE;
 	bGoToShopStop													:= FALSE;
-	bBottomAxisAir													:= FALSE;
+//	bBottomAxisAir													:= FALSE;
 	bUpperAxisAir 													:= FALSE;
 	uiUpperKnivesAutoStepCounter									:= 10;
 	
@@ -107,7 +107,7 @@ IF bUpperKnivesAutoProcedure THEN
 				
 			100:
 				IF NOT (stUpperKnives[1].rAktualPosition = stUpperKnives[1].rShopPosition) THEN 
-					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[1].rAktualPosition+15;  //Offset nowego algorytmu
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[1].rAktualPosition+16;  //Offset nowego algorytmu
 					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
 					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
 					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
@@ -643,13 +643,13 @@ END_IF
 //BOTTTOM KNIVES
 //////////////////////
 
-IF bBottomKnivesAutoStart AND NOT bBottomKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+IF bBottomKnivesAutoStart AND NOT bBottomKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 	bBottomKnivesAutoProcedure								:= TRUE;
 	bBottomKnivesReHomingStop								:= FALSE;
 	bBottomKnivesAutoStop									:= FALSE;
 	bGoToShopStop											:= FALSE;
 	bBottomAxisAir											:= FALSE;
-	bUpperAxisAir 											:= FALSE;
+//	bUpperAxisAir 											:= FALSE;
 	uiBottomKnivesAutoStepCounter							:= 10;
 	
 END_IF
@@ -747,7 +747,7 @@ IF bBottomKnivesAutoProcedure THEN
 				
 			100:
 				IF NOT (stBottomKnives[1].rAktualPosition = stBottomKnives[1].rShopPosition) THEN
-					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[1].rAktualPosition+20; //Offset nowy algorytm
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[1].rAktualPosition+16; //Offset nowy algorytm //20
 					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
 					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
 					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
@@ -1292,7 +1292,7 @@ END_IF
 //// TRYB DEMO
 //////////////////////////////////////////////////////////////////////////////////
 
-IF bTrybDemoStart AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+IF bTrybDemoStart AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 	
 	bTrybDemoStop									:= FALSE;
 	bUpperKnivesAutoStop							:= FALSE;
@@ -1325,10 +1325,10 @@ IF bTrybDemoProcedure THEN
 			END_IF	
 		
 		20:
-			bUpperKnivesAutoStart					:=TRUE;
+			//bUpperKnivesAutoStart					:=TRUE;
 			bBottomKnivesAutoStart					:=TRUE;
 			bMuscle									:=TRUE;
-			uiTrybDemoStepCounter					:=30;
+			uiTrybDemoStepCounter					:=22;
 			
 			//Stop Procedure
 			IF bTrybDemoStop THEN
@@ -1339,14 +1339,60 @@ IF bTrybDemoProcedure THEN
 					uiTrybDemoStepCounter						:=0;					
 			END_IF
 
-			
-		30:
-			bUpperKnivesAutoStart					:=FALSE;
+		22:
+			//bUpperKnivesAutoStart					:=FALSE;
 			bBottomKnivesAutoStart					:=FALSE;
 			
-			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+			IF NOT bBottomKnivesAutoProcedure THEN
 				bMuscle								:=FALSE;
-				uiTrybDemoStepCounter				:=35;				
+				uiTrybDemoStepCounter				:=24;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bStopMoveNewHommingNeed						:=TRUE;
+					bUpperAxisGripper							:= FALSE;
+					bBottomAxisGripper							:= FALSE;	
+					
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration		:= 5000;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration		:= 5000;
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 			:= ModeAH;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 			:= ModeAH;
+					
+					IF (arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) THEN
+					uiTrybDemoStepCounter						:=0;
+					END_IF
+			END_IF
+			
+		24: 
+			//bUpperAxisAir										:=TRUE;
+			bBottomAxisAir										:=TRUE;
+			//bUpperAxisUpMove									:=TRUE;
+			bUpperKnivesAutoStart								:=TRUE;	
+			uiTrybDemoStepCounter								:= 30;			
+						
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bUpperAxisAir								:=FALSE;
+					bBottomAxisAir								:=FALSE;
+					bUpperAxisUpMove							:=FALSE;
+					uiTrybDemoStepCounter						:=0;
+					bStopMoveNewHommingNeed						:=TRUE;					
+			END_IF
+			
+		30:
+			bUpperKnivesAutoStart								:=FALSE;
+			//bBottomKnivesAutoStart							:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure THEN
+				//bMuscle										:=FALSE;
+				uiTrybDemoStepCounter							:=35;				
 			END_IF
 			
 			//Stop Procedure
@@ -1371,9 +1417,9 @@ IF bTrybDemoProcedure THEN
 			
 		35:
 			bUpperAxisAir										:=TRUE;
-			bBottomAxisAir										:=TRUE;
+			//bBottomAxisAir									:=TRUE;
 			//bUpperAxisUpMove									:=TRUE;				ZMIANA WM 2019.04.29
-			fbTrybDemoDleay(IN := TRUE , PT := T#3500MS);
+			fbTrybDemoDleay(IN := TRUE , PT := T#1000MS);							//3500
 				IF fbTrybDemoDleay.Q THEN
 					fbTrybDemoDleay(IN := FALSE); // Reset timer
 					uiTrybDemoStepCounter						:= 36;
@@ -1583,7 +1629,7 @@ END_IF
 /// GoToShop
 //////////////////////////////////
 
-IF bGoToShop AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+IF bGoToShop AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 	
 	bGoToShopStop										:= FALSE;
 	bUpperKnivesAutoStop								:= FALSE;
@@ -1599,10 +1645,10 @@ IF bGoToShopProcedure THEN
 	CASE uiTrybGotoShopCounter OF 
 		
 		10:
-			bUpperKnivesAutoStart					:=TRUE;
-			bBottomKnivesAutoStart					:=TRUE;
-			bMuscle									:=TRUE;
-			uiTrybGotoShopCounter					:=20;
+			//bUpperKnivesAutoStart								:=TRUE;
+			bBottomKnivesAutoStart								:=TRUE;
+			bMuscle												:=TRUE;
+			uiTrybGotoShopCounter								:=20;
 			
 			//Stop Procedure
 			IF bGoToShopStop THEN
@@ -1614,11 +1660,11 @@ IF bGoToShopProcedure THEN
 			
 						
 		20:
-			bUpperKnivesAutoStart					:=FALSE;
-			bBottomKnivesAutoStart					:=FALSE;
+			//bUpperKnivesAutoStart								:=FALSE;
+			bBottomKnivesAutoStart								:=FALSE;
 			
-			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
-				uiTrybGotoShopCounter				:=30;				
+			IF NOT bBottomKnivesAutoProcedure THEN
+				uiTrybGotoShopCounter							:=30;				
 			END_IF
 			
 			//Stop Procedure
@@ -1630,9 +1676,9 @@ IF bGoToShopProcedure THEN
 			END_IF
 			
 		30:	
-			bUpperKnivesReHomingStart				:=TRUE;
-			bBottomKnivesReHomingStart				:=TRUE;
-			uiTrybGotoShopCounter					:=40;
+			//bUpperKnivesReHomingStart							:=TRUE;
+			bBottomKnivesReHomingStart							:=TRUE;
+			uiTrybGotoShopCounter								:=40;
 			
 			//Stop Procedure
 			IF bGoToShopStop THEN
@@ -1643,11 +1689,72 @@ IF bGoToShopProcedure THEN
 			END_IF
 			
 		40:
-			bUpperKnivesReHomingStart				:=FALSE;
-			bBottomKnivesReHomingStart				:=FALSE;
+			//bUpperKnivesReHomingStart							:=FALSE;
+			bBottomKnivesReHomingStart							:=FALSE;
+						
+			IF NOT bBottomKnivesReHomingProcedure THEN
+				uiTrybGotoShopCounter							:=50;
+				bMuscle											:=FALSE;				
+			END_IF
 			
-			IF NOT bUpperKnivesReHomingProcedure AND NOT bBottomKnivesReHomingProcedure THEN
-				uiTrybGotoShopCounter				:=100;				
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+		50:
+			bUpperKnivesAutoStart								:=TRUE;
+			//bBottomKnivesAutoStart							:=TRUE;
+			//bMuscle											:=TRUE;
+			uiTrybGotoShopCounter								:=60;
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+						
+		60:
+			bUpperKnivesAutoStart								:=FALSE;
+			//bBottomKnivesAutoStart							:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure THEN
+				uiTrybGotoShopCounter							:=70;				
+			END_IF
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+		70:	
+			bUpperKnivesReHomingStart							:=TRUE;
+			//bBottomKnivesReHomingStart						:=TRUE;
+			uiTrybGotoShopCounter								:=80;
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+		80:
+			bUpperKnivesReHomingStart							:=FALSE;
+			//bBottomKnivesReHomingStart						:=FALSE;
+			
+			IF NOT bUpperKnivesReHomingProcedure THEN
+				uiTrybGotoShopCounter							:=100;				
 			END_IF
 			
 			//Stop Procedure
@@ -1659,9 +1766,9 @@ IF bGoToShopProcedure THEN
 			END_IF
 	
 		100:
-			bGoToShopProcedure						:=FALSE;
-			bMuscle									:=FALSE;
-			uiTrybGotoShopCounter					:=0;
+			bGoToShopProcedure									:=FALSE;
+			bMuscle												:=FALSE;
+			uiTrybGotoShopCounter								:=0;
 			
 			
 			//Stop Procedure
@@ -1682,12 +1789,12 @@ END_IF
 ///////////////////////////////////////////////////////////////
 
 IF NOT bBottomAxisEnable  THEN
-	IF bBottomKnivesReHomingStart AND NOT bBottomKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	IF bBottomKnivesReHomingStart AND NOT bBottomKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 		bBottomKnivesReHomingProcedure								:=TRUE;
 		bGoToShopStop												:=FALSE;
 		bBottomKnivesReHomingStop									:=FALSE;
 		bBottomAxisAir												:= FALSE;
-		bUpperAxisAir 												:= FALSE;
+		//bUpperAxisAir 												:= FALSE;
 		uiBottomKnivesReHomingStepCounter							:=10;
 		rKnivesHomingAcceleration									:=100;
 
@@ -2074,7 +2181,7 @@ IF bBottomKnivesReHomingProcedure THEN
 				IF NOT bUpperKnivesReHomingProcedure AND NOT bTrybDemoProcedure THEN
 					bMuscle										:= FALSE;
 					bBottomAxisAir								:=TRUE;
-					bUpperAxisAir	 							:=TRUE;				
+					//bUpperAxisAir	 							:=TRUE;				
 				END_IF
 			//rKnivesHomingAcceleration							:= 500;
 			uiBottomKnivesReHomingStepCounter					:= 0;
@@ -2092,11 +2199,11 @@ END_IF
 ///////////////////////////////////////////////////////////////
 
 IF NOT bUpperAxisEnable  THEN
-	IF bUpperKnivesReHomingStart AND NOT bUpperKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	IF bUpperKnivesReHomingStart AND NOT bUpperKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 		bUpperKnivesReHomingProcedure								:=TRUE;
 		bUpperKnivesReHomingStop									:=FALSE;
 		bGoToShopStop												:=FALSE;
-		bBottomAxisAir												:=FALSE;
+		//bBottomAxisAir											:=FALSE;
 		bUpperAxisAir 												:=FALSE;
 		rKnivesHomingAcceleration									:=100;
 		uiUpperKnivesReHomingStepCounter							:=10;
@@ -2112,9 +2219,9 @@ IF bUpperKnivesReHomingProcedure THEN
 		
 		// Gripper OFF
 		10:
-			bUpperKnivesReHomed								:=FALSE;
+			bUpperKnivesReHomed									:=FALSE;
 			bUpperAxisGripper									:=FALSE;
-			bMuscle												:=TRUE;
+			//bMuscle											:=TRUE;
 			IF bUpperCylinderSensor_OFF THEN
 				fbUpperSafetyTimer(IN := FALSE);
 				uiUpperKnivesReHomingStepCounter				:=11;
@@ -2482,7 +2589,7 @@ IF bUpperKnivesReHomingProcedure THEN
 			bUpperKnivesReHomingProcedure						:= FALSE;
 				IF NOT bBottomKnivesReHomingProcedure AND NOT bTrybDemoProcedure THEN
 					bMuscle										:=FALSE;
-					bBottomAxisAir								:=TRUE;
+					//bBottomAxisAir							:=TRUE;
 					bUpperAxisAir 								:=TRUE;				
 				END_IF
 			//rKnivesHomingAcceleration							:= 500;
@@ -2497,7 +2604,7 @@ END_IF
 //// TRYB DEMO CYCLIC
 //////////////////////////////////////////////////////////////////////////////////
 
-IF bTrybDemoCyclicStart AND NOT bTrybDemoCyclicProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+IF bTrybDemoCyclicStart AND NOT bTrybDemoCyclicProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate AND bRewinderEnable THEN
 	
 	bTrybDemoCyclicStop								:= FALSE;
 	bUpperKnivesAutoStop							:= FALSE;
