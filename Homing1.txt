@@ -1,0 +1,105 @@
+///////////////////////////////////////////////////////////////
+///////////////
+///////////////				AXES HOMING PROCEDURE
+///////////////
+///////////////////////////////////////////////////////////////
+
+IF bUpperAxisPositiveStopStart THEN
+	rUpperAxisTorqueCmd									:= 15;  //10
+	fbUpperAxisCommandBlock.Cancel						:= FALSE;
+	fbUpperAxisCommandBlock.Execute						:= TRUE;
+	
+	IF fbUpperAxisCommandBlock.Active AND DV_Axis[UpperAxis.AxisNo].A_0_0038=rUpperAxisTorqueCmd THEN
+		 arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Distance 				:= 1000;
+		 arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 				:= rHomingVelocity;
+		 arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 			:= rHomingAcceleration;
+		 arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 			:= rHomingAcceleration;
+		 arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 				:= ModePosRel;  
+	ELSE
+		arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+		arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 				:= ModeAB;
+	END_IF
+	
+	IF fbUpperAxisCommandBlock.CommandExecuted THEN
+		bUpperAxisPositiveStopStart						:= FALSE;
+	END_IF
+		 
+ELSE
+	rUpperAxisTorqueCmd									:= 20;	 //100
+	fbUpperAxisCommandBlock.Cancel						:= TRUE;
+	fbUpperAxisCommandBlock.Execute						:= FALSE;
+	
+	
+	arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+	arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 				:= ModeAB;
+END_IF
+
+//		Reference Distance value setting
+fbUpperAxisReadReferenceDistance.Enable								:= TRUE;
+IF NOT (fbUpperAxisReadReferenceDistance.Value=rUpperAxisReferenceDistance) THEN
+	fbUpperAxisSetReferenceDistance.Execute							:= TRUE;
+ELSE
+	fbUpperAxisSetReferenceDistance.Execute							:= FALSE;
+END_IF
+
+
+IF bUpperAxisHomingStart AND NOT bUpperAxisPositiveStopStart THEN
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Enable				:= TRUE;
+	IF arAxisStatus_gb[UpperAxis.AxisNo].SetupMode.EnableAck THEN
+		arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Homing			:= TRUE;
+	END_IF
+ELSIF NOT bUpperAxisHomingStart AND NOT bUpperAxisPositiveStopStart THEN
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Enable				:= FALSE;
+	arAxisCtrl_gb[UpperAxis.AxisNo].SetupMode.Homing				:= FALSE;
+END_IF
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+IF bBottomAxisPositiveStopStart THEN
+	rBottomAxisTorqueCmd									:= 15; //12
+	fbBottomAxisCommandBlock.Cancel						:= FALSE;
+	fbBottomAxisCommandBlock.Execute						:= TRUE;
+	
+	IF fbBottomAxisCommandBlock.Active AND DV_Axis[BottomAxis.AxisNo].A_0_0038=rBottomAxisTorqueCmd THEN
+		 arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Distance 				:= 1000;
+		 arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 				:= rHomingVelocity;
+		 arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 			:= rHomingAcceleration;
+		 arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 			:= rHomingAcceleration;
+		 arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 				:= ModePosRel;
+	ELSE
+		arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+		arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 				:= ModeAB;
+	END_IF
+	
+	IF fbBottomAxisCommandBlock.CommandExecuted THEN
+		bBottomAxisPositiveStopStart						:= FALSE;
+	END_IF
+		 
+ELSE
+	rBottomAxisTorqueCmd									:= 20;	 //100
+	fbBottomAxisCommandBlock.Cancel						:= TRUE;
+	fbBottomAxisCommandBlock.Execute						:= FALSE;
+	
+	
+	arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+	arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 				:= ModeAB;
+END_IF
+
+//		Reference Distance value setting
+fbBottomAxisReadReferenceDistance.Enable								:= TRUE;
+IF NOT (fbBottomAxisReadReferenceDistance.Value=rBottomAxisReferenceDistance) THEN
+	fbBottomAxisSetReferenceDistance.Execute							:= TRUE;
+ELSE
+	fbBottomAxisSetReferenceDistance.Execute							:= FALSE;
+END_IF
+
+IF bBottomAxisHomingStart AND NOT bBottomAxisPositiveStopStart THEN
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Enable				:= TRUE;
+	IF arAxisStatus_gb[BottomAxis.AxisNo].SetupMode.EnableAck THEN
+		arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Homing			:= TRUE;
+	END_IF
+ELSIF NOT bBottomAxisHomingStart AND NOT bBottomAxisPositiveStopStart THEN
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Homing				:= FALSE;
+	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.Enable				:= FALSE;
+END_IF
