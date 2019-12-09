@@ -1,0 +1,202 @@
+//  Knives positions calculation
+FOR iShopPosCalcCounter:=1 TO iUpperNumberOfKnife  DO
+	stUpperKnives[iShopPosCalcCounter].rShopPosition						:=(rUpperLastKnifeShopPosition+(rUpperKnivesShopGap*(iUpperNumberOfKnife-iShopPosCalcCounter)));
+	stUpperKnives[iShopPosCalcCounter].rAfterHomingPosition					:=(rUpperAxisKnivesHomingRightHomePosition-(rUpperKnivesWidth*(iShopPosCalcCounter-1)));		
+END_FOR
+
+FOR iShopPosCalcCounter:=1 TO iBottomNumberOfKnife  DO
+	stBottomKnives[iShopPosCalcCounter].rShopPosition						:=(rBottomLastKnifeShopPosition+(rBottomKnivesShopGap*(iBottomNumberOfKnife-iShopPosCalcCounter))+rPozycjaNozyWMagazynie);
+	stBottomKnives[iShopPosCalcCounter].rAfterHomingPosition				:=(rBottomAxisKnivesHomingRightHomePosition-(rBottomKnivesWidth*(iShopPosCalcCounter-1)));	
+END_FOR
+
+////////			Calculating Comand Positions for Knives
+IF NOT bRightKnifeActive AND NOT bLeftKnifeActive AND NOT bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber-1)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iUpperKnivesAutoPosCalcCounter+1))*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber-1)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= ((rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter+1))*(rLabelsDistance)))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	
+ELSIF bRightKnifeActive AND NOT bLeftKnifeActive AND NOT bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+			
+ELSIF bRightKnifeActive AND bLeftKnifeActive AND NOT bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+
+ELSIF bRightKnifeActive AND bLeftKnifeActive AND bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF (iBottomKnivesAutoPosCalcCounter = (iLabelsNumber+2)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset-rSupportKnifeOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+			
+ELSIF NOT bRightKnifeActive AND bLeftKnifeActive AND NOT bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+		
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iUpperKnivesAutoPosCalcCounter+1))*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter+1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR		
+
+
+ELSIF NOT bRightKnifeActive AND bLeftKnifeActive AND bSupportKnifeActive AND NOT bSupportKnifeActive_Right THEN
+		
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iUpperKnivesAutoPosCalcCounter+1))*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter+1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF (iBottomKnivesAutoPosCalcCounter = (iLabelsNumber+1)) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset-rSupportKnifeOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ELSIF bRightKnifeActive AND NOT bLeftKnifeActive AND NOT bSupportKnifeActive AND bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+	
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		
+		IF (iBottomKnivesAutoPosCalcCounter = 1) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF (iBottomKnivesAutoPosCalcCounter = 2) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset - rSupportKnifeOffset_Right);
+		ELSIF ((iBottomKnivesAutoPosCalcCounter > 2) AND (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+1))) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+
+			
+ELSIF bRightKnifeActive AND bLeftKnifeActive AND NOT bSupportKnifeActive AND bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter = 1) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF (iBottomKnivesAutoPosCalcCounter = 2) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset - rSupportKnifeOffset_Right);
+		ELSIF ((iBottomKnivesAutoPosCalcCounter > 2) AND (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+2))) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+
+ELSIF bRightKnifeActive AND bLeftKnifeActive AND bSupportKnifeActive AND bSupportKnifeActive_Right THEN
+	
+	FOR iUpperKnivesAutoPosCalcCounter:=1 TO iUpperNumberOfKnife DO
+		IF (iUpperKnivesAutoPosCalcCounter <= (iLabelsNumber+1)) THEN
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iUpperKnivesAutoPosCalcCounter)*(rLabelsDistance))+rUpperKniveDimensionOffset+rUpperAxisRightMoveOffset+stUpperKnives[iUpperKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSE
+			stUpperKnives[iUpperKnivesAutoPosCalcCounter].rCommandPosition	:= stUpperKnives[iUpperKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR
+
+	FOR iBottomKnivesAutoPosCalcCounter:=1 TO iBottomNumberOfKnife DO
+		IF (iBottomKnivesAutoPosCalcCounter = 1) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-iBottomKnivesAutoPosCalcCounter)*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF (iBottomKnivesAutoPosCalcCounter = 2) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset - rSupportKnifeOffset_Right);
+		ELSIF ((iBottomKnivesAutoPosCalcCounter > 2) AND (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+2))) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-1))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset);
+		ELSIF ((iBottomKnivesAutoPosCalcCounter > 2) AND (iBottomKnivesAutoPosCalcCounter <= (iLabelsNumber+3))) THEN
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= (rBaseDistance + ((iLabelsNumber-(iBottomKnivesAutoPosCalcCounter-2))*(rLabelsDistance))+rBottomKniveDimensionOffset+stBottomKnives[iBottomKnivesAutoPosCalcCounter].rKnifePositionOffset-rSupportKnifeOffset);
+		
+		ELSE
+			stBottomKnives[iBottomKnivesAutoPosCalcCounter].rCommandPosition	:= stBottomKnives[iBottomKnivesAutoPosCalcCounter].rShopPosition;
+		END_IF
+	END_FOR	
+	
+END_IF
