@@ -49,7 +49,6 @@ ELSE
 	bMuscle										:=FALSE;
 END_IF
 
-(*
 ////////////////////////////////////////
 ////////
 ////////		Jog handling Upper Axis
@@ -103,7 +102,7 @@ ELSE
 	arAxisCtrl_gb[BottomAxis.AxisNo].SetupMode.JogPlus					:=FALSE;
 END_IF
 
-IF bUpperAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
+IF bUpperAxisJogMoveProcedure AND bCoverCutting AND bSensorPlate THEN
 	CASE uiUpperAxisJogMove OF
 		
 		10:
@@ -130,7 +129,7 @@ IF bUpperAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
 	END_CASE
 END_IF
 
-IF bBottomAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
+IF bBottomAxisJogMoveProcedure AND bCoverCutting AND bSensorPlate THEN
 	CASE uiBottomAxisJogMove OF
 		
 		10:
@@ -157,8 +156,111 @@ IF bBottomAxisJogMoveProcedure AND bCoversClosed AND bSensorPlate THEN
 	END_CASE
 END_IF
 
+///////////////
+///Griper test
+///////////////
 
-*)
+fbRTrigGripperTest(CLK:=bGriperTest , Q=> );
 
+IF fbRTrigGripperTest.Q THEN
+		uiGriperTest															:=10;
+		bGriperTestProcedure													:=TRUE;
+END_IF
 
+IF bGriperTestProcedure THEN
+	CASE uiGriperTest OF
+		
+		10:
+			bUpperAxisGripper												:=TRUE;
+			bBottomAxisGripper												:=TRUE;
+			uiGriperTest													:=20;
+			
+			IF NOT bGriperTest THEN
+				uiGriperTest												:=0;
+				bUpperAxisGripper											:=FALSE;
+				bBottomAxisGripper											:=FALSE;
+				bGriperTestProcedure										:=FALSE;
+				fbGriperTestDleay(IN := FALSE);
+			END_IF
+			
+		20:	
+			fbGriperTestDleay(IN := TRUE , PT := tValveDelayGripperTest);
+			IF fbGriperTestDleay.Q THEN
+				uiGriperTest												:=30;
+				fbGriperTestDleay(IN := FALSE);
+			END_IF
+			
+			IF NOT bGriperTest THEN
+				uiGriperTest												:=0;
+				bUpperAxisGripper											:=FALSE;
+				bBottomAxisGripper											:=FALSE;
+				bGriperTestProcedure										:=FALSE;
+				fbGriperTestDleay(IN := FALSE);
+			END_IF 										
+		
+		30:
+			bUpperAxisGripper												:=FALSE;
+			bBottomAxisGripper												:=FALSE;
+			fbGriperTestDleay(IN := TRUE , PT := tValveDelayGripperTest);
+			IF fbGriperTestDleay.Q THEN
+				uiGriperTest												:=40;
+				fbGriperTestDleay(IN := FALSE);
+			END_IF
+			
+			IF NOT bGriperTest THEN
+				uiGriperTest												:=0;
+				bUpperAxisGripper											:=FALSE;
+				bBottomAxisGripper											:=FALSE;
+				bGriperTestProcedure										:=FALSE;
+				fbGriperTestDleay(IN := FALSE);
+			END_IF 			
+		
+		
+		40:
+			IF bGriperTest THEN
+				uiGriperTest												:=10;
+			ELSE
+				uiGriperTest												:=0;
+				bGriperTestProcedure										:=FALSE;
+			END_IF
+				
+	END_CASE
+END_IF
+
+//////////////////////////////////////////////////////////////////
+//////////Position Sensor
+/////////////////////////////////////////////////////////////////
+
+//Bottom
+fbRTrigBottomPositionSensor(CLK:=bBottomPositionSensor , Q=> );
+fbFTrigBottomPositionSensor(CLK:=bBottomPositionSensor , Q=> );
+
+IF fbRTrigBottomPositionSensor.Q THEN
+	rBottomSaveSensorPosition1:=rBottomAxisActualPosition;
+END_IF
+
+IF fbFTrigBottomPositionSensor.Q THEN
+	rBottomSaveSensorPosition2:=rBottomAxisActualPosition;
+END_IF
+
+//Upper
+fbRTrigUpperPositionSensor(CLK:=bUpperPositionSensor , Q=> );
+fbFTrigUpperPositionSensor(CLK:=bUpperPositionSensor , Q=> );
+
+IF fbRTrigUpperPositionSensor.Q THEN
+	rUpperSaveSensorPosition1:=rUpperAxisActualPosition;
+END_IF
+
+IF fbFTrigUpperPositionSensor.Q THEN
+	rUpperSaveSensorPosition2:=rUpperAxisActualPosition;
+END_IF
+
+IF bResetSavePosition THEN
+	rBottomSaveSensorPosition1:=0;
+	rBottomSaveSensorPosition2:=0;
+	rUpperSaveSensorPosition1:=0;
+	rUpperSaveSensorPosition2:=0;
+END_IF
+
+// Home position test
 
