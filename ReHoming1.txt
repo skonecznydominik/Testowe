@@ -15,7 +15,7 @@ bBottomKnivesNewHomingStop:=bBottomKnivesHomingStop;
 ///////////////////////////////////////////////////////////////
 
 IF NOT bUpperAxisEnable  THEN
-	IF bUpperKnivesCleanShopStart AND NOT bUpperKnivesCleanShopProcedure THEN
+	IF bUpperKnivesCleanShopStart AND NOT bUpperKnivesCleanShopProcedure AND bRewinderEnable THEN
 		bUpperKnivesCleanShopProcedure								:=TRUE;
 		bUpperAxisAir 												:=FALSE;	
 		uiUpperKnivesCleanShopStepCounter							:=10;
@@ -31,10 +31,10 @@ IF bUpperKnivesCleanShopProcedure THEN
 		
 		// Gripper OFF
 		10:
-			bMuscle												:=TRUE;
-			bUpperAxisGripper									:=FALSE;
+			//bMuscle												:=TRUE;
+			bUpperAxisGripper										:=FALSE;
 			IF bUpperCylinderSensor_OFF THEN
-				uiUpperKnivesCleanShopStepCounter				:=11;
+				uiUpperKnivesCleanShopStepCounter					:=11;
 			END_IF
 			
 			//Stop Procedure
@@ -223,7 +223,7 @@ IF bUpperKnivesCleanShopProcedure THEN
 		
 		100:
 			bUpperKnivesInCleanShop								:= TRUE;
-			bMuscle												:= FALSE;
+			//bMuscle											:= FALSE;
 			bUpperKnivesCleanShopProcedure						:= FALSE;
 			bUpperAxisAir 										:= FALSE;
 			uiUpperKnivesCleanShopStepCounter					:= 0;
@@ -240,7 +240,7 @@ END_IF
 ///////////////////////////////////////////////////////////////
 
 IF NOT bBottomAxisEnable  THEN
-	IF bBottomKnivesCleanShopStart AND NOT bBottomKnivesCleanShopProcedure THEN
+	IF bBottomKnivesCleanShopStart AND NOT bBottomKnivesCleanShopProcedure AND bRewinderEnable THEN
 		bBottomKnivesCleanShopProcedure								:=TRUE;
 		uiBottomKnivesCleanShopStepCounter							:=10;
 		bBottomAxisAir												:=FALSE;
@@ -834,7 +834,7 @@ IF bUpperKnivesNewHomingProcedure THEN
 		// Gripper OFF
 		10:
 			bUpperKnivesNewHomed								:=FALSE;
-			bMuscle												:=TRUE;
+			//bMuscle											:=TRUE;
 			bUpperAxisGripper									:=FALSE;
 			IF bUpperCylinderSensor_OFF THEN
 				uiUpperKnivesNewHomingStepCounter				:=11;
@@ -1151,7 +1151,7 @@ IF bUpperKnivesNewHomingProcedure THEN
 			bUpperKnivesNewHomed								:= TRUE;
 			bUpperKnivesNewHomingProcedure						:= FALSE;
 				IF NOT bBottomKnivesNewHomingProcedure THEN
-					bMuscle										:= FALSE;
+					//bMuscle									:= FALSE;
 					bUpperAxisAir 								:= TRUE;
 				END_IF
 			uiUpperKnivesNewHomingStepCounter					:= 0;
