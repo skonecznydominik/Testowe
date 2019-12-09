@@ -65,7 +65,7 @@ END_IF
 
 //Redy
 
-IF bRewinderEnable AND NOT(bGlobalError) AND bCoversClosed AND bSensorPlate THEN
+IF bRewinderEnable AND NOT(bGlobalError) AND bCoverCutting AND bSensorPlate THEN
 	bReady										:=TRUE;
 ELSE
 	bReady										:=FALSE;	
