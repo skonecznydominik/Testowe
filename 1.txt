@@ -1,0 +1,2915 @@
+//////////////////////
+//UPPPER KNIVES
+//////////////////////
+
+IF bUpperKnivesAutoStart AND NOT bUpperKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	bUpperKnivesAutoProcedure										:= TRUE;
+	bUpperKnivesReHomingStop										:= FALSE;
+	bUpperKnivesAutoStop											:= FALSE;
+	bGoToShopStop													:= FALSE;
+	bBottomAxisAir													:= FALSE;
+	bUpperAxisAir 													:= FALSE;
+	uiUpperKnivesAutoStepCounter									:= 10;
+	
+END_IF
+
+IF bUpperKnivesAutoProcedure THEN
+	CASE uiUpperKnivesAutoStepCounter OF 
+			//  Iddle state
+			0:
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//								KNIVES TO SHOP
+//
+////////////////////////////////////////////////////////////////////////////////////////			
+						// Gripper OFF
+			10:
+				iUpperHomingKnivesCounter							:=iUpperNumberOfKnife;
+				bUpperAxisGripper									:= FALSE;
+				IF bUpperCylinderSensor_OFF THEN
+					fbUpperSafetyTimer(IN := FALSE);
+					IF bStopMoveNewHommingNeed THEN
+						arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 				:= ModeAH;
+						
+						IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH)) THEN
+						uiUpperKnivesAutoStepCounter					:= 90;
+						END_IF
+					ELSE	
+						uiUpperKnivesAutoStepCounter					:= 100;
+					END_IF
+					
+				END_IF
+				
+				
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			(*11:	
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 100;
+				END_IF
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF*)
+		
+				//Bazowanie po zatrzymaniu podczas rozkladania nozy
+			90:		
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= rUpperAxisKnivesNewHomingRightPosition1;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+						uiUpperKnivesAutoStepCounter									:= 91;
+						bStopMoveNewHommingNeed											:= FALSE;
+					END_IF
+					
+					//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+					
+			91:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 101;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+				
+				
+			100:
+				IF NOT (stUpperKnives[1].rAktualPosition = stUpperKnives[1].rShopPosition) THEN 
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[1].rAktualPosition+15;  //Offset nowego algorytmu
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+						uiUpperKnivesAutoStepCounter									:= 101;
+					END_IF
+				ELSE
+					bMarker1															:=TRUE;
+					uiUpperKnivesAutoStepCounter										:= 106;
+				END_IF
+				
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			101:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 102;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			102:
+				bUpperAxisGripper									:= TRUE;
+				IF bUpperCylinderSensor_ON THEN
+					fbUpperSafetyTimer(IN := FALSE);
+					uiUpperKnivesAutoStepCounter					:= 103;
+				END_IF
+				
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			
+							// delay time
+			103:	
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 104;
+				END_IF
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			104:
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[1].rShopPosition+rUpperAxisKnivesNewHomingRightPosition2Offset;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 105;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			105:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				stUpperKnives[iUpperHomingKnivesCounter].rAktualPosition			:=stUpperKnives[iUpperHomingKnivesCounter].rShopPosition;
+				
+				FOR iForCounter2:=1 TO iUpperNumberOfKnife BY 1 DO
+				stUpperKnives[iForCounter2].rAktualPosition				:=stUpperKnives[iForCounter2].rShopPosition;					
+				END_FOR
+								
+				iUpperHomingKnivesCounter											:=iUpperHomingKnivesCounter-1;							
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 109; //106
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			106:	
+				bUpperAxisGripper									:= FALSE;
+				IF bUpperCylinderSensor_OFF THEN
+					iUpperHomingKnivesCounter						:=iUpperHomingKnivesCounter-1;
+					fbUpperSafetyTimer(IN := FALSE);
+					uiUpperKnivesAutoStepCounter					:= 107;
+				END_IF	
+				
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF	
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			107:
+
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 108;
+				END_IF
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+	
+			108:
+			
+				IF (iUpperHomingKnivesCounter=0) THEN
+					uiUpperKnivesAutoStepCounter					:= 109;
+				ELSE
+					uiUpperKnivesAutoStepCounter					:= 100;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+								
+			109:
+				iUpperHomingKnivesCounter							:= 1;
+				bUpperAxisGripper									:= FALSE;
+				IF bUpperCylinderSensor_OFF THEN
+					fbUpperSafetyTimer(IN := FALSE);
+					uiUpperKnivesAutoStepCounter						:= 110;
+				END_IF
+				
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF				
+				
+							
+			110:
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 111;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF		
+	
+			111:
+				IF bGoToShopProcedure	THEN
+				uiUpperKnivesAutoStepCounter						:= 300;
+				ELSE
+					IF bMarker1 THEN
+					bMarker1										:=FALSE;	
+					uiUpperKnivesAutoStepCounter					:= 200;
+					ELSE
+					uiUpperKnivesAutoStepCounter					:= 112;
+					END_IF	
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF				
+
+			112:
+				bUpperKnivesReHomingStart							:=TRUE;
+				uiUpperKnivesAutoStepCounter						:= 113;
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:= FALSE;
+					bUpperAxisGripper								:= FALSE;
+					bUpperKnivesReHomingStop						:= TRUE;
+					uiUpperKnivesAutoStepCounter					:= 0;
+
+				END_IF				
+				
+			113:
+				bUpperKnivesReHomingStart							:=FALSE;
+				IF NOT bUpperKnivesReHomingProcedure THEN
+					uiUpperKnivesAutoStepCounter					:= 200;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:= FALSE;
+					bUpperAxisGripper								:= FALSE;
+					bUpperKnivesReHomingStop						:= TRUE;
+					uiUpperKnivesAutoStepCounter					:= 0;
+				END_IF				
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//								KNIVES TO COMMAND POSITIONS
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+			200:
+				IF NOT (stUpperKnives[iUpperHomingKnivesCounter].rAktualPosition = stUpperKnives[iUpperHomingKnivesCounter].rCommandPosition) THEN
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[iUpperHomingKnivesCounter].rAktualPosition;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+						uiUpperKnivesAutoStepCounter									:= 201;
+					END_IF
+				ELSE
+					uiUpperKnivesAutoStepCounter										:= 216;
+				END_IF
+				
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			201:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 202;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			202:
+				bUpperAxisGripper									:= TRUE;
+				IF bUpperCylinderSensor_ON THEN
+					fbUpperSafetyTimer(IN := FALSE);
+					uiUpperKnivesAutoStepCounter					:= 203;
+				END_IF
+				
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			
+							// delay time
+			203:	
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 204;
+				END_IF
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			204:
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[iUpperHomingKnivesCounter].rCommandPosition-10;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:=205;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			205:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 206;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			206:
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[iUpperHomingKnivesCounter].rCommandPosition;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity*0.1;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:=207;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			207:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 214;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+
+			214:
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[iUpperHomingKnivesCounter].rCommandPosition-10; //Offset nowy algorytm
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:=215;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			
+			215:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 216;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+
+	///		schowanie chwytaka
+			216:	
+				bUpperAxisGripper													:= FALSE;
+				IF bUpperCylinderSensor_OFF THEN
+					fbUpperSafetyTimer(IN := FALSE);
+					uiUpperKnivesAutoStepCounter									:= 217;
+					stUpperKnives[iUpperHomingKnivesCounter].rAktualPosition			:=stUpperKnives[iUpperHomingKnivesCounter].rCommandPosition;
+					iUpperHomingKnivesCounter											:=iUpperHomingKnivesCounter+1;
+				END_IF	
+	
+				//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bUpperGriperBlocked								:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			217:	
+				fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbUpperKnivesHomingDleay.Q THEN
+					fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiUpperKnivesAutoStepCounter					:= 218;
+				END_IF
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF	
+
+					
+			218:
+				IF (iUpperHomingKnivesCounter=iUpperNumberOfKnife+1) THEN
+					uiUpperKnivesAutoStepCounter					:= 300;
+				ELSE
+					uiUpperKnivesAutoStepCounter					:= 200;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF								
+
+////    Moving Gripper to WAITING POSITION
+			300:
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= -20;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 311;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			311:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+					uiUpperKnivesAutoStepCounter									:= 312;
+				END_IF
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF
+			
+			312:
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 		:= 5000;
+				arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 			:= ModeAB;
+				IF (arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAB) THEN 
+				  uiUpperKnivesAutoStepCounter							:= 1000;
+				END_IF
+	
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF	
+			// PROCEDURE OK -> KNIVES HOMED
+			1000:
+				bUpperKnivesAutoProcedure							:= FALSE;
+				uiUpperKnivesAutoStepCounter						:= 0;
+				
+				//Stop Procedure
+				IF bUpperKnivesAutoStop THEN
+					bUpperKnivesAutoProcedure						:=FALSE;
+					uiUpperKnivesAutoStepCounter					:=0;
+					bUpperAxisGripper								:= FALSE;
+				END_IF				
+
+	
+	END_CASE
+ELSE
+	uiUpperKnivesHomingStepCounter									:=0;
+END_IF
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////
+//BOTTTOM KNIVES
+//////////////////////
+
+IF bBottomKnivesAutoStart AND NOT bBottomKnivesAutoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	bBottomKnivesAutoProcedure								:= TRUE;
+	bBottomKnivesReHomingStop								:= FALSE;
+	bBottomKnivesAutoStop									:= FALSE;
+	bGoToShopStop											:= FALSE;
+	bBottomAxisAir											:= FALSE;
+	bUpperAxisAir 											:= FALSE;
+	uiBottomKnivesAutoStepCounter							:= 10;
+	
+END_IF
+
+
+
+IF bBottomKnivesAutoProcedure THEN
+	CASE uiBottomKnivesAutoStepCounter OF 
+			//  Iddle state
+			0:
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//								KNIVES TO SHOP
+//
+////////////////////////////////////////////////////////////////////////////////////////			
+						// Gripper OFF
+			10:
+				iBottomHomingKnivesCounter							:=iBottomNumberOfKnife;
+				bBottomAxisGripper									:= FALSE;
+				IF bBottomCylinderSensor_OFF THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					IF bStopMoveNewHommingNeed THEN
+						arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+						IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH)) THEN
+						uiBottomKnivesAutoStepCounter					:= 90;
+						END_IF
+						
+					ELSE	
+						uiBottomKnivesAutoStepCounter					:= 100;
+					END_IF
+					
+				END_IF
+				
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			(*11:	
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 100;
+				END_IF
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF*)
+				//Bazowanie po zatrzymaniu podczas rozkladania nozy
+		90:		
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= rBottomAxisKnivesNewHomingRightPosition1;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+						uiBottomKnivesAutoStepCounter									:= 91;
+						bStopMoveNewHommingNeed											:= FALSE;
+					END_IF
+					
+					//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+					
+			91:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 101;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+				
+			100:
+				IF NOT (stBottomKnives[1].rAktualPosition = stBottomKnives[1].rShopPosition) THEN
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[1].rAktualPosition+20; //Offset nowy algorytm
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+						uiBottomKnivesAutoStepCounter									:= 101;
+					END_IF
+				ELSE
+					bMarker2															:=TRUE;
+					uiBottomKnivesAutoStepCounter										:= 106;
+				END_IF
+				
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			101:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 102;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			102:
+				bBottomAxisGripper									:= TRUE;
+				IF bBottomCylinderSensor_ON THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					uiBottomKnivesAutoStepCounter					:= 103;
+				END_IF
+				
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+							// delay time
+			103:	
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 104;
+				END_IF
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			104:
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[1].rShopPosition+rBottomAxisKnivesNewHomingRightPosition2Offset;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 105;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			105:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				
+				stBottomKnives[iBottomHomingKnivesCounter].rAktualPosition			:=stBottomKnives[iBottomHomingKnivesCounter].rShopPosition;
+
+				FOR iForCounter1:=1 TO iBottomNumberOfKnife BY 1 DO
+					stBottomKnives[iForCounter1].rAktualPosition				:=stBottomKnives[iForCounter1].rShopPosition;	
+				END_FOR				
+				
+				iBottomHomingKnivesCounter											:=iBottomHomingKnivesCounter-1;
+				
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 109;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			106:	
+				bBottomAxisGripper													:= FALSE;
+				IF bBottomCylinderSensor_OFF THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					uiBottomKnivesAutoStepCounter									:= 107;
+					stBottomKnives[iBottomHomingKnivesCounter].rAktualPosition			:=stBottomKnives[iBottomHomingKnivesCounter].rShopPosition;
+					iBottomHomingKnivesCounter											:=iBottomHomingKnivesCounter-1;
+				END_IF	
+				
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+	
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			107:	
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 108;
+				END_IF
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF	
+	
+			108:
+				IF (iBottomHomingKnivesCounter=0) THEN
+					uiBottomKnivesAutoStepCounter					:= 109;
+				ELSE
+					uiBottomKnivesAutoStepCounter					:= 100;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+											
+			109:
+				iBottomHomingKnivesCounter							:= 1;
+				bBottomAxisGripper									:= FALSE;
+				IF bBottomCylinderSensor_OFF THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					uiBottomKnivesAutoStepCounter					:= 110;
+				END_IF
+				
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+							
+			110:
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 111;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+	
+			111:
+				IF bGoToShopProcedure	THEN
+				uiBottomKnivesAutoStepCounter						:= 300;
+				ELSE
+					IF bMarker2 THEN
+					bMarker2										:=FALSE;	
+					uiBottomKnivesAutoStepCounter					:= 200;
+					ELSE
+					uiBottomKnivesAutoStepCounter					:= 112;
+					END_IF	
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+
+			112:
+				bBottomKnivesReHomingStart							:=TRUE;
+				uiBottomKnivesAutoStepCounter						:= 113;
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:= FALSE;
+					bBottomAxisGripper								:= FALSE;
+					bBottomKnivesReHomingStop						:= TRUE;
+					uiBottomKnivesAutoStepCounter					:= 0;
+				END_IF
+				
+			113:
+				bBottomKnivesReHomingStart							:=FALSE;
+				IF NOT bBottomKnivesReHomingProcedure THEN
+					uiBottomKnivesAutoStepCounter					:= 200;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:= FALSE;
+					bBottomAxisGripper								:= FALSE;
+					bBottomKnivesReHomingStop						:= TRUE;
+					uiBottomKnivesAutoStepCounter					:= 0;					
+				END_IF
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//								KNIVES TO COMMAND POSITIONS
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+			200:
+				IF NOT (stBottomKnives[iBottomHomingKnivesCounter].rAktualPosition = stBottomKnives[iBottomHomingKnivesCounter].rCommandPosition) THEN
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[iBottomHomingKnivesCounter].rAktualPosition;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+					IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+						fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+							IF fbBottomKnivesHomingDleay.Q THEN
+							fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+							uiBottomKnivesAutoStepCounter					:= 201;
+							END_IF
+					END_IF
+				ELSE
+					uiBottomKnivesAutoStepCounter										:= 216;
+				END_IF
+				
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			201:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 202;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			202:
+				bBottomAxisGripper									:= TRUE;
+				IF bBottomCylinderSensor_ON THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					uiBottomKnivesAutoStepCounter					:= 203;
+				END_IF
+				
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+							// delay time
+			203:	
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 204;
+				END_IF
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			204:
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[iBottomHomingKnivesCounter].rCommandPosition-10;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:=205;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+			205:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 206;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			206:
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[iBottomHomingKnivesCounter].rCommandPosition;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity*0.1;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:=207;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+			207:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 214;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+
+
+		///		cofniecie z wysunietym nozem
+			214:
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[iBottomHomingKnivesCounter].rCommandPosition-10; //Offset nowy algorytm
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:=215;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+			215:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 216;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+
+	///		schowanie chwytaka
+			216:	
+				bBottomAxisGripper													:= FALSE;
+				IF bBottomCylinderSensor_OFF THEN
+					fbBottomSafetyTimer(IN := FALSE);
+					uiBottomKnivesAutoStepCounter									:= 217;
+					stBottomKnives[iBottomHomingKnivesCounter].rAktualPosition			:=stBottomKnives[iBottomHomingKnivesCounter].rCommandPosition;
+					iBottomHomingKnivesCounter											:=iBottomHomingKnivesCounter+1;
+				END_IF	
+	
+				//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesAutoStop							:=TRUE;
+					bBottomKnivesAutoStop							:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+				// delay time
+			217:	
+				fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+				IF fbBottomKnivesHomingDleay.Q THEN
+					fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+					uiBottomKnivesAutoStepCounter					:= 218;
+				END_IF
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF	
+
+				
+			218:
+				IF (iBottomHomingKnivesCounter=iBottomNumberOfKnife+1) THEN
+					uiBottomKnivesAutoStepCounter					:= 300;
+				ELSE
+					uiBottomKnivesAutoStepCounter					:= 200;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF				
+
+				
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//								
+//
+////////////////////////////////////////////////////////////////////////////////////////				
+				
+	
+				
+////    Moving Gripper to WAITING POSITION
+			300:
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= -20;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rAutoVelocity;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rAutorAcceleration;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 311;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			311:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 			:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModeAH;
+				IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+					uiBottomKnivesAutoStepCounter									:= 312;
+				END_IF
+				
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF
+			
+			312:
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 	:= 5000;
+				arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 			:= ModeAB;
+				IF (arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAB) THEN 
+				  uiBottomKnivesAutoStepCounter								:= 1000;
+				END_IF
+	
+				//Stop Procedure
+				IF bBottomKnivesAutoStop THEN
+					bBottomKnivesAutoProcedure						:=FALSE;
+					uiBottomKnivesAutoStepCounter					:=0;
+					bBottomAxisGripper								:= FALSE;
+				END_IF	
+			// PROCEDURE OK -> KNIVES HOMED
+			1000:
+				bBottomKnivesAutoProcedure							:= FALSE;
+				uiBottomKnivesAutoStepCounter						:= 0;
+
+
+	
+	END_CASE
+ELSE
+	uiBottomKnivesHomingStepCounter									:=0;
+END_IF
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//// TRYB DEMO
+//////////////////////////////////////////////////////////////////////////////////
+
+IF bTrybDemoStart AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	
+	bTrybDemoStop									:= FALSE;
+	bUpperKnivesAutoStop							:= FALSE;
+	bBottomKnivesAutoStop							:= FALSE;
+	bGoToShopStop									:= FALSE;
+	bBottomAxisAir									:= FALSE;
+	bUpperAxisAir 									:= FALSE;
+	bTrybDemoProcedure								:= TRUE;
+	uiTrybDemoStepCounter							:= 20;
+	bTrybDemoStartStop								:= TRUE;
+	//bStopMoveNewHommingNeed							:=FALSE;
+	
+END_IF
+
+IF bTrybDemoProcedure THEN
+	CASE uiTrybDemoStepCounter OF 
+		
+		10:
+			iLabelsNumber							:=9;
+			rBaseDistance							:=150;
+			rLabelsDistance							:=45;
+			uiTrybDemoStepCounter					:=20;
+					
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF	
+		
+		20:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			bMuscle									:=TRUE;
+			uiTrybDemoStepCounter					:=30;
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bStopMoveNewHommingNeed						:=TRUE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF
+
+			
+		30:
+			bUpperKnivesAutoStart					:=FALSE;
+			bBottomKnivesAutoStart					:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				bMuscle								:=FALSE;
+				uiTrybDemoStepCounter				:=35;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bStopMoveNewHommingNeed						:=TRUE;
+					bUpperAxisGripper							:= FALSE;
+					bBottomAxisGripper							:= FALSE;	
+					
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration		:= 5000;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration		:= 5000;
+					arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 			:= ModeAH;
+					arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 			:= ModeAH;
+					
+					IF (arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) THEN
+					uiTrybDemoStepCounter						:=0;
+					END_IF
+			END_IF
+				
+			
+		35:
+			bUpperAxisAir										:=TRUE;
+			bBottomAxisAir										:=TRUE;
+			//bUpperAxisUpMove									:=TRUE;				ZMIANA WM 2019.04.29
+			fbTrybDemoDleay(IN := TRUE , PT := T#3500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 36;
+				END_IF
+				
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bUpperAxisAir								:=FALSE;
+					bBottomAxisAir								:=FALSE;
+					bUpperAxisUpMove							:=FALSE;
+					uiTrybDemoStepCounter						:=0;
+					bStopMoveNewHommingNeed						:=TRUE;					
+			END_IF
+			
+		//		Dodal WM 2019.04.25  ->	
+		36:
+			bUpperAxisUpMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1000MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 37;
+				END_IF
+				
+		37:
+			bUpperAxisRightMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 40;
+				END_IF
+		
+		40:
+			fbTrybDemoDleay(IN := TRUE , PT := T#2S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 42;		//45
+				END_IF
+		
+		42:
+			bKrokAutoKrok42									:=TRUE;
+			
+			IF	NOT bTrybDemoStartStop THEN
+				uiTrybDemoStepCounter						:= 45;
+				bKrokAutoKrok42								:=FALSE;							
+			END_IF
+			
+			IF bOdstawDostawNoze	THEN
+				uiTrybDemoStepCounter						:= 45;	
+			END_IF
+						
+		45:
+		
+			bUpperAxisRightMove								:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+			IF fbTrybDemoDleay.Q THEN
+				fbTrybDemoDleay(IN := FALSE); // Reset timer
+				uiTrybDemoStepCounter						:= 46;
+			END_IF	
+		
+		46:
+			bUpperAxisUpMove									:=FALSE;
+
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					IF NOT bOdstawDostawNoze THEN
+						uiTrybDemoStepCounter						:= 35;
+					END_IF
+					IF NOT bTrybDemoStartStop THEN
+						bOdstawDostawNoze							:=FALSE;
+						bUpperAxisAir								:=FALSE;
+						bBottomAxisAir								:=FALSE;
+						bKrokAutoKrok42								:=FALSE;
+						uiTrybDemoStepCounter						:= 300;	
+					END_IF
+				END_IF
+				
+		50:
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 55;		
+				END_IF
+				
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;
+					bStopMoveNewHommingNeed						:=TRUE;					
+			END_IF
+		
+		55:
+			bGoToShop								:=TRUE;
+			uiTrybDemoStepCounter					:=60;
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;	
+					bStopMoveNewHommingNeed						:=TRUE;				
+			END_IF
+		
+		60:
+			IF NOT bGoToShopProcedure THEN
+			uiTrybDemoStepCounter					:=70;
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;
+					bStopMoveNewHommingNeed						:=TRUE;					
+			END_IF
+	
+		70:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			uiTrybDemoStepCounter					:=80;
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;	
+					bStopMoveNewHommingNeed						:=TRUE;				
+			END_IF
+			
+						
+		80:
+			bUpperKnivesAutoStart					:=FALSE;
+			bBottomKnivesAutoStart					:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				uiTrybDemoStepCounter				:=90;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;	
+					bStopMoveNewHommingNeed						:=TRUE;				
+			END_IF
+				
+		90:
+			bGoToShopProcedure						:=FALSE;
+			uiTrybDemoStepCounter					:=290;
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;	
+					bStopMoveNewHommingNeed						:=TRUE;				
+			END_IF
+			
+		290:
+				
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoStepCounter						:= 20;		
+				END_IF
+				
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;
+					bStopMoveNewHommingNeed						:=TRUE;					
+			END_IF
+		
+		300:
+			bTrybDemoProcedure						:=FALSE;
+			bBottomAxisAir							:=TRUE;
+			bUpperAxisAir 							:=TRUE;
+			uiTrybDemoStepCounter					:=0;
+			
+			//Stop Procedure
+			IF bTrybDemoStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF
+		
+			
+		
+	END_CASE
+END_IF
+
+
+///////////////////////////////////
+/// GoToShop
+//////////////////////////////////
+
+IF bGoToShop AND NOT bTrybDemoProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	
+	bGoToShopStop										:= FALSE;
+	bUpperKnivesAutoStop								:= FALSE;
+	bBottomKnivesAutoStop								:= FALSE;
+	bBottomAxisAir										:= FALSE;
+	bUpperAxisAir 										:= FALSE;
+	bGoToShopProcedure									:= TRUE;
+	uiTrybGotoShopCounter								:= 10;
+	
+END_IF
+
+IF bGoToShopProcedure THEN
+	CASE uiTrybGotoShopCounter OF 
+		
+		10:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			bMuscle									:=TRUE;
+			uiTrybGotoShopCounter					:=20;
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+						
+		20:
+			bUpperKnivesAutoStart					:=FALSE;
+			bBottomKnivesAutoStart					:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				uiTrybGotoShopCounter				:=30;				
+			END_IF
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+		30:	
+			bUpperKnivesReHomingStart				:=TRUE;
+			bBottomKnivesReHomingStart				:=TRUE;
+			uiTrybGotoShopCounter					:=40;
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+			
+		40:
+			bUpperKnivesReHomingStart				:=FALSE;
+			bBottomKnivesReHomingStart				:=FALSE;
+			
+			IF NOT bUpperKnivesReHomingProcedure AND NOT bBottomKnivesReHomingProcedure THEN
+				uiTrybGotoShopCounter				:=100;				
+			END_IF
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+	
+		100:
+			bGoToShopProcedure						:=FALSE;
+			bMuscle									:=FALSE;
+			uiTrybGotoShopCounter					:=0;
+			
+			
+			//Stop Procedure
+			IF bGoToShopStop THEN
+					bGoToShopProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybGotoShopCounter						:=0;					
+			END_IF
+		
+	END_CASE
+END_IF
+
+///////////////////////////////////////////////////////////////
+///////////////
+///////////////			 BOTTOM	KNIVES RE HOMING
+///////////////
+///////////////////////////////////////////////////////////////
+
+IF NOT bBottomAxisEnable  THEN
+	IF bBottomKnivesReHomingStart AND NOT bBottomKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+		bBottomKnivesReHomingProcedure								:=TRUE;
+		bGoToShopStop												:=FALSE;
+		bBottomKnivesReHomingStop									:=FALSE;
+		bBottomAxisAir												:= FALSE;
+		bUpperAxisAir 												:= FALSE;
+		uiBottomKnivesReHomingStepCounter							:=10;
+		rKnivesHomingAcceleration									:=100;
+
+	END_IF
+END_IF
+
+IF bBottomKnivesReHomingProcedure THEN
+	CASE uiBottomKnivesReHomingStepCounter	OF
+		
+		// Idlle state
+		0:	
+			
+		
+		// Gripper OFF
+		10:
+			bBottomKnivesReHomed								:=FALSE;
+			bBottomAxisGripper									:=FALSE;
+			bMuscle												:=TRUE;
+			IF bBottomCylinderSensor_OFF THEN
+				fbBottomSafetyTimer(IN := FALSE);
+				uiBottomKnivesReHomingStepCounter				:=11;
+			END_IF
+			
+			//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop						:=TRUE;
+					bBottomKnivesReHomingStop						:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			// delay time
+		11:	
+			fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbBottomKnivesHomingDleay.Q THEN
+				fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiBottomKnivesReHomingStepCounter				:= 20;
+			END_IF
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+
+		// Moving Gripper to Left end shop position
+		20:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= rBottomAxisKnivesReHomingLeftPosition1;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter								:= 21;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		21:	
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter									:= 30;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+		// Gripper ON
+		30:
+			bBottomAxisGripper									:= TRUE;
+			IF bBottomCylinderSensor_ON THEN
+				fbBottomSafetyTimer(IN := FALSE);
+				uiBottomKnivesReHomingStepCounter				:= 31;
+			END_IF
+			
+			//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop						:=TRUE;
+					bBottomKnivesReHomingStop						:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF			
+
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+					// delay time
+		31:	
+			fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbBottomKnivesHomingDleay.Q THEN
+				fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiBottomKnivesReHomingStepCounter				:= 40;
+			END_IF
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		
+		//Moving Gripper to Left position 1
+		40:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= rBottomAxisKnivesReHomingLeftPosition2;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter								:= 41;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		41:
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter									:= 50;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+			// Gripper OFF
+		50:
+			bBottomAxisGripper									:= FALSE;
+			IF bBottomCylinderSensor_OFF THEN
+				fbBottomSafetyTimer(IN := FALSE);
+				uiBottomKnivesReHomingStepCounter				:= 51;
+			END_IF
+			
+			//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop						:=TRUE;
+					bBottomKnivesReHomingStop						:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF	
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+			// delay time
+		51:	
+			fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbBottomKnivesHomingDleay.Q THEN
+				fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiBottomKnivesReHomingStepCounter				:= 60;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+		//Moving Gripper to Right position 1
+		60:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= rBottomAxisKnivesReHomingRightPosition1;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter								:= 61;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		61:
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter									:= 70;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+		// Gripper ON
+		70:
+			bBottomAxisGripper									:= TRUE;
+			IF bBottomCylinderSensor_ON THEN
+				fbBottomSafetyTimer(IN := FALSE);
+				uiBottomKnivesReHomingStepCounter				:= 71;
+			END_IF
+			
+			//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop						:=TRUE;
+					bBottomKnivesReHomingStop						:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF	
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+					// delay time
+		71:	
+			fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbBottomKnivesHomingDleay.Q THEN
+				fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiBottomKnivesReHomingStepCounter				:= 80;
+			END_IF
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		
+		//Moving Gripper to Right position 1
+		80:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= stBottomKnives[1].rShopPosition+rBottomAxisKnivesReHomingRightPosition2Offset;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter								:= 81;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		81:
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter									:= 90;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+			// Gripper OFF
+		90:
+			bBottomAxisGripper									:= FALSE;
+			IF bBottomCylinderSensor_OFF THEN
+				fbBottomSafetyTimer(IN := FALSE);
+				uiBottomKnivesReHomingStepCounter				:= 91;
+			END_IF
+			
+			//Safety Timer
+				fbBottomSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbBottomSafetyTimer.Q THEN
+					fbBottomSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop						:=TRUE;
+					bBottomKnivesReHomingStop						:=TRUE;
+					bBottomGriperBlocked							:=TRUE;
+					bTrybDemoStop									:=TRUE;
+				END_IF	
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+			// delay time
+		91:	
+			fbBottomKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbBottomKnivesHomingDleay.Q THEN
+				fbBottomKnivesHomingDleay(IN := FALSE); // Reset timer
+				
+				uiBottomKnivesReHomingStepCounter				:= 100;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+		//Moving Gripper to Right position 1
+		100:
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Position 					:= -20;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter								:= 101;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		101:
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 				:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[BottomAxis.AxisNo].Admin.CmdDone)) THEN
+				uiBottomKnivesReHomingStepCounter									:= 199;
+			END_IF
+			
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+			
+		199:
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin.StopDeceleration 	:= 5000;
+			arAxisCtrl_gb[BottomAxis.AxisNo].Admin._OpMode.en 			:= ModeAB;
+			IF (arAxisStatus_gb[BottomAxis.AxisNo].Admin._OpModeAck = ModeAB) THEN 
+			  uiBottomKnivesReHomingStepCounter							:= 200;
+			END_IF
+
+			//Stop Procedure
+			IF bBottomKnivesReHomingStop THEN
+				bBottomKnivesReHomingProcedure					:=FALSE;
+				uiBottomKnivesReHomingStepCounter				:=0;
+				bBottomAxisGripper								:=FALSE;
+			END_IF
+		// PROCEDURE OK -> BOTTOM KNIVES RE HOMED
+		
+		200:
+			bBottomKnivesReHomed								:= TRUE;
+			bBottomKnivesReHomingProcedure						:= FALSE;
+				IF NOT bUpperKnivesReHomingProcedure AND NOT bTrybDemoProcedure THEN
+					bMuscle										:= FALSE;
+					bBottomAxisAir								:=TRUE;
+					bUpperAxisAir	 							:=TRUE;				
+				END_IF
+			//rKnivesHomingAcceleration							:= 500;
+			uiBottomKnivesReHomingStepCounter					:= 0;
+
+	
+	END_CASE
+	
+END_IF
+
+
+///////////////////////////////////////////////////////////////
+///////////////
+///////////////			 UPPER	KNIVES RE HOMING
+///////////////
+///////////////////////////////////////////////////////////////
+
+IF NOT bUpperAxisEnable  THEN
+	IF bUpperKnivesReHomingStart AND NOT bUpperKnivesReHomingProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+		bUpperKnivesReHomingProcedure								:=TRUE;
+		bUpperKnivesReHomingStop									:=FALSE;
+		bGoToShopStop												:=FALSE;
+		bBottomAxisAir												:=FALSE;
+		bUpperAxisAir 												:=FALSE;
+		rKnivesHomingAcceleration									:=100;
+		uiUpperKnivesReHomingStepCounter							:=10;
+	END_IF
+END_IF
+
+IF bUpperKnivesReHomingProcedure THEN
+	CASE uiUpperKnivesReHomingStepCounter	OF
+		
+		// Idlle state
+		0:	
+			
+		
+		// Gripper OFF
+		10:
+			bUpperKnivesReHomed								:=FALSE;
+			bUpperAxisGripper									:=FALSE;
+			bMuscle												:=TRUE;
+			IF bUpperCylinderSensor_OFF THEN
+				fbUpperSafetyTimer(IN := FALSE);
+				uiUpperKnivesReHomingStepCounter				:=11;
+			END_IF
+			
+			//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop					:=TRUE;
+					bBottomKnivesReHomingStop					:=TRUE;
+					bUpperGriperBlocked							:=TRUE;
+					bTrybDemoStop								:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			// delay time
+		11:	
+			fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbUpperKnivesHomingDleay.Q THEN
+				fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiUpperKnivesReHomingStepCounter				:= 20;
+			END_IF
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+
+		// Moving Gripper to Left end shop position
+		20:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= rUpperAxisKnivesReHomingLeftPosition1;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter								:= 21;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		21:	
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 					:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter									:= 30;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+		// Gripper ON
+		30:
+			bUpperAxisGripper									:= TRUE;
+			IF bUpperCylinderSensor_ON THEN
+				fbUpperSafetyTimer(IN := FALSE);
+				uiUpperKnivesReHomingStepCounter				:= 31;
+			END_IF
+			
+			//Safety
+			fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop					:=TRUE;
+					bBottomKnivesReHomingStop					:=TRUE;
+					bUpperGriperBlocked							:=TRUE;
+					bTrybDemoStop								:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+					// delay time
+		31:	
+			fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbUpperKnivesHomingDleay.Q THEN
+				fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiUpperKnivesReHomingStepCounter				:= 40;
+			END_IF
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		
+		//Moving Gripper to Left position 1
+		40:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= rUpperAxisKnivesReHomingLeftPosition2;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter								:= 41;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		41:
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 					:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter									:= 50;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+			// Gripper OFF
+		50:
+			bUpperAxisGripper									:= FALSE;
+			IF bUpperCylinderSensor_OFF THEN
+				fbUpperSafetyTimer(IN := FALSE);
+				uiUpperKnivesReHomingStepCounter				:= 51;
+			END_IF
+			
+			//Safety Timer
+				fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop					:=TRUE;
+					bBottomKnivesReHomingStop					:=TRUE;
+					bUpperGriperBlocked							:=TRUE;
+					bTrybDemoStop								:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+			// delay time
+		51:	
+			fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbUpperKnivesHomingDleay.Q THEN
+				fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiUpperKnivesReHomingStepCounter				:= 60;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+		//Moving Gripper to Right position 1
+		60:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= rUpperAxisKnivesReHomingRightPosition1;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter								:= 61;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		61:
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 					:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter									:= 70;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+		// Gripper ON
+		70:
+			bUpperAxisGripper									:= TRUE;
+			IF bUpperCylinderSensor_ON THEN
+				fbUpperSafetyTimer(IN := FALSE);
+				uiUpperKnivesReHomingStepCounter				:= 71;
+			END_IF
+			
+			//Safety Timer
+			fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop					:=TRUE;
+					bBottomKnivesReHomingStop					:=TRUE;
+					bUpperGriperBlocked							:=TRUE;
+					bTrybDemoStop								:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+					// delay time
+		71:	
+			fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbUpperKnivesHomingDleay.Q THEN
+				fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+				uiUpperKnivesReHomingStepCounter				:= 80;
+			END_IF
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		
+		//Moving Gripper to Right position 1
+		80:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= stUpperKnives[1].rShopPosition+rUpperAxisKnivesReHomingRightPosition2Offset;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter								:= 81;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		81:
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 					:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter									:= 90;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+			// Gripper OFF
+		90:
+			bUpperAxisGripper									:= FALSE;
+			IF bUpperCylinderSensor_OFF THEN
+				fbUpperSafetyTimer(IN := FALSE);
+				uiUpperKnivesReHomingStepCounter				:= 91;
+			END_IF
+			
+			//Safety Timer
+			fbUpperSafetyTimer(IN := TRUE , PT := tValveSafetyTime);
+				IF fbUpperSafetyTimer.Q THEN
+					fbUpperSafetyTimer(IN := FALSE);
+ 					bUpperKnivesReHomingStop					:=TRUE;
+					bBottomKnivesReHomingStop					:=TRUE;
+					bUpperGriperBlocked							:=TRUE;
+					bTrybDemoStop								:=TRUE;
+				END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+			// delay time
+		91:	
+			fbUpperKnivesHomingDleay(IN := TRUE , PT := tValveDelayTime);
+			IF fbUpperKnivesHomingDleay.Q THEN
+				fbUpperKnivesHomingDleay(IN := FALSE); // Reset timer
+
+				uiUpperKnivesReHomingStepCounter				:= 100;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+		//Moving Gripper to Right position 1
+		100:
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Position 					:= -20;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Velocity 					:= rKnivesHomingVelocity;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Acceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].PosMode.Deceleration 				:= rKnivesHomingAcceleration;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 					:= ModePosAbs;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModePosAbs) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter								:= 101;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		101:
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 					:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 						:= ModeAH;
+			IF ((arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAH) AND (arAxisStatus_gb[UpperAxis.AxisNo].Admin.CmdDone)) THEN
+				uiUpperKnivesReHomingStepCounter									:= 199;
+			END_IF
+			
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+			
+		199:
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin.StopDeceleration 		:= 5000;
+			arAxisCtrl_gb[UpperAxis.AxisNo].Admin._OpMode.en 			:= ModeAB;
+			IF (arAxisStatus_gb[UpperAxis.AxisNo].Admin._OpModeAck = ModeAB) THEN 
+			  uiUpperKnivesReHomingStepCounter							:= 200;
+			END_IF
+
+			//Stop Procedure
+			IF bUpperKnivesReHomingStop THEN
+				bUpperKnivesReHomingProcedure					:=FALSE;
+				uiUpperKnivesReHomingStepCounter				:=0;
+				bUpperAxisGripper								:=FALSE;
+			END_IF
+		// PROCEDURE OK -> BOTTOM KNIVES RE HOMED
+		
+		200:
+			bUpperKnivesReHomed									:= TRUE;
+			bUpperKnivesReHomingProcedure						:= FALSE;
+				IF NOT bBottomKnivesReHomingProcedure AND NOT bTrybDemoProcedure THEN
+					bMuscle										:=FALSE;
+					bBottomAxisAir								:=TRUE;
+					bUpperAxisAir 								:=TRUE;				
+				END_IF
+			//rKnivesHomingAcceleration							:= 500;
+			uiUpperKnivesReHomingStepCounter					:= 0;
+	
+	END_CASE
+	
+END_IF
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//// TRYB DEMO CYCLIC
+//////////////////////////////////////////////////////////////////////////////////
+
+IF bTrybDemoCyclicStart AND NOT bTrybDemoCyclicProcedure AND NOT bRewinderRun AND bCoversClosed AND bSensorPlate THEN
+	
+	bTrybDemoCyclicStop								:= FALSE;
+	bUpperKnivesAutoStop							:= FALSE;
+	bBottomKnivesAutoStop							:= FALSE;
+	bGoToShopStop									:= FALSE;
+	bTrybDemoCyclicProcedure						:= TRUE;
+	bBottomAxisAir									:= FALSE;
+	bUpperAxisAir 									:= FALSE;
+	uiTrybDemoCyclicStepCounter						:= 10;
+	
+END_IF
+
+IF bTrybDemoCyclicProcedure THEN
+	CASE uiTrybDemoCyclicStepCounter OF 
+		
+		10:
+			iLabelsNumber							:=9;
+			rBaseDistance							:=50;
+			rLabelsDistance							:=35;
+			uiTrybDemoCyclicStepCounter				:=20;
+			bRightKnifeActive						:=TRUE;
+					
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure						:=FALSE;
+					uiTrybDemoCyclicStepCounter						:=0;					
+			END_IF	
+		
+		20:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=30;
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+	
+		30:
+			bUpperKnivesAutoStart								:=FALSE;
+			bBottomKnivesAutoStart								:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				uiTrybDemoCyclicStepCounter						:=35;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+				
+			
+		35:
+			bUpperAxisAir										:=TRUE;
+			bBottomAxisAir										:=TRUE;
+			bUpperAxisUpMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 36;
+				END_IF
+				
+						//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bUpperAxisAir								:=FALSE;
+					bBottomAxisAir								:=FALSE;
+					bUpperAxisUpMove							:=FALSE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF	
+			
+		36:
+			bUpperAxisRightMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 40;
+				END_IF
+				
+			
+		40:
+			bUpperAxisAir										:=FALSE;
+			bBottomAxisAir										:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter				:= 45;		//45
+				END_IF
+				
+		
+		45:
+		
+			bUpperAxisRightMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1500MS);
+			IF fbTrybDemoDleay.Q THEN
+				fbTrybDemoDleay(IN := FALSE); // Reset timer
+				uiTrybDemoCyclicStepCounter						:= 46;
+			END_IF	
+		
+			
+		46:
+			bUpperAxisUpMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 50;				
+				END_IF
+				
+		50:
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 55;		
+				END_IF
+		
+		55:
+			bGoToShop								:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=60;
+		
+		60:
+			bGoToShop								:=FALSE;
+			IF NOT bGoToShopProcedure THEN
+			uiTrybDemoCyclicStepCounter				:=110;
+			END_IF
+		
+		110:
+			iLabelsNumber							:=4;
+			rBaseDistance							:=150;
+			rLabelsDistance							:=45;
+			uiTrybDemoCyclicStepCounter				:=120;
+			bRightKnifeActive						:=FALSE;
+					
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure						:=FALSE;
+					uiTrybDemoCyclicStepCounter						:=0;					
+			END_IF	
+		
+		120:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=130;
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+	
+		130:
+			bUpperKnivesAutoStart								:=FALSE;
+			bBottomKnivesAutoStart								:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				uiTrybDemoCyclicStepCounter						:=135;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+				
+			
+		135:
+			bUpperAxisAir										:=TRUE;
+			bBottomAxisAir										:=TRUE;
+			bUpperAxisUpMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 136;
+				END_IF
+				
+						//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bUpperAxisAir								:=FALSE;
+					bBottomAxisAir								:=FALSE;
+					bUpperAxisUpMove							:=FALSE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF	
+			
+		136:
+			bUpperAxisRightMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 140;
+				END_IF
+				
+			
+		140:
+			bUpperAxisAir										:=FALSE;
+			bBottomAxisAir										:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter				:= 145;		//45
+				END_IF
+				
+		
+		145:
+		
+			bUpperAxisRightMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1500MS);
+			IF fbTrybDemoDleay.Q THEN
+				fbTrybDemoDleay(IN := FALSE); // Reset timer
+				uiTrybDemoCyclicStepCounter						:= 146;
+			END_IF	
+		
+			
+		146:
+			bUpperAxisUpMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 150;					
+				END_IF
+				
+		150:
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 155;		
+				END_IF
+		
+		155:
+			bGoToShop								:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=160;
+		
+		160:
+			bGoToShop								:=FALSE;
+			IF NOT bGoToShopProcedure THEN
+			uiTrybDemoCyclicStepCounter				:=210;
+			END_IF	
+			
+		210:
+			iLabelsNumber							:=6;
+			rBaseDistance							:=150;
+			rLabelsDistance							:=45;
+			uiTrybDemoCyclicStepCounter				:=220;
+			bRightKnifeActive						:=FALSE;
+					
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure						:=FALSE;
+					uiTrybDemoCyclicStepCounter						:=0;					
+			END_IF	
+		
+		220:
+			bUpperKnivesAutoStart					:=TRUE;
+			bBottomKnivesAutoStart					:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=30;
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+	
+		230:
+			bUpperKnivesAutoStart								:=FALSE;
+			bBottomKnivesAutoStart								:=FALSE;
+			
+			IF NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure THEN
+				uiTrybDemoCyclicStepCounter						:=235;				
+			END_IF
+			
+			//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoCyclicProcedure					:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					uiTrybDemoCyclicStepCounter					:=0;					
+			END_IF
+				
+			
+		235:
+			bUpperAxisAir										:=TRUE;
+			bBottomAxisAir										:=TRUE;
+			bUpperAxisUpMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 236;
+				END_IF
+				
+						//Stop Procedure
+			IF bTrybDemoCyclicStop THEN
+					bTrybDemoProcedure							:=FALSE;
+					bUpperKnivesAutoStop						:=TRUE;
+					bBottomKnivesAutoStop						:=TRUE;
+					bUpperAxisAir								:=FALSE;
+					bBottomAxisAir								:=FALSE;
+					bUpperAxisUpMove							:=FALSE;
+					uiTrybDemoStepCounter						:=0;					
+			END_IF	
+			
+		236:
+			bUpperAxisRightMove									:=TRUE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 240;
+				END_IF
+				
+			
+		240:
+			bUpperAxisAir										:=FALSE;
+			bBottomAxisAir										:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter				:= 245;		//45
+				END_IF
+				
+		
+		245:
+		
+			bUpperAxisRightMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#1500MS);
+			IF fbTrybDemoDleay.Q THEN
+				fbTrybDemoDleay(IN := FALSE); // Reset timer
+				uiTrybDemoCyclicStepCounter						:= 246;
+			END_IF	
+		
+			
+		246:
+			bUpperAxisUpMove									:=FALSE;
+			fbTrybDemoDleay(IN := TRUE , PT := T#500MS);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter						:= 250;						
+				END_IF
+				
+		250:
+			fbTrybDemoDleay(IN := TRUE , PT := T#1S);
+				IF fbTrybDemoDleay.Q THEN
+					fbTrybDemoDleay(IN := FALSE); // Reset timer
+					uiTrybDemoCyclicStepCounter					:= 255;		
+				END_IF
+		
+		255:
+			bGoToShop								:=TRUE;
+			uiTrybDemoCyclicStepCounter				:=260;
+		
+		260:
+			bGoToShop								:=FALSE;
+			IF NOT bGoToShopProcedure THEN
+			uiTrybDemoCyclicStepCounter				:=300;
+			END_IF	
+					
+			
+		300:
+			IF NOT bTrybDemoCyclicStart THEN
+			bTrybDemoCyclicProcedure					:=FALSE;
+			uiTrybDemoCyclicStepCounter					:=0;
+			bUpperAxisAir								:=TRUE;
+			bBottomAxisAir								:=TRUE;
+			ELSE
+			uiTrybDemoCyclicStepCounter					:=10;	
+			END_IF
+					
+		
+	END_CASE
+END_IF
+
+IF NOT(bUpperKnivesReHomingProcedure) AND NOT(bBottomKnivesReHomingProcedure) THEN
+	rKnivesHomingAcceleration									:=500;
+END_IF
+
+//Axis Air
+IF NOT bGoToShopProcedure AND NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure AND NOT bTrybDemoProcedure AND NOT bBottomKnivesReHomingProcedure AND NOT bUpperKnivesReHomingProcedure AND bCoversClosed AND bSensorPlate THEN
+	bBottomAxisAir								:=TRUE;
+	bUpperAxisAir 								:=TRUE;
+ELSIF NOT bGoToShopProcedure AND NOT bUpperKnivesAutoProcedure AND NOT bBottomKnivesAutoProcedure AND NOT bTrybDemoProcedure AND NOT bBottomKnivesReHomingProcedure AND NOT bUpperKnivesReHomingProcedure AND (NOT bCoversClosed OR NOT bSensorPlate) THEN
+	bBottomAxisAir								:=FALSE;
+	bUpperAxisAir 								:=FALSE;
+END_IF
+
+//SAFETY
+IF NOT bCoversClosed OR NOT bSensorPlate THEN
+	bUpperKnivesAutoStop						:= TRUE;
+	bBottomKnivesAutoStop						:= TRUE;
+	bTrybDemoStop								:= TRUE;
+	bGoToShopStop								:= TRUE;
+	bBottomKnivesReHomingStop					:= TRUE;
+	bUpperKnivesReHomingStop					:= TRUE;
+END_IF
+
+//GriperBlocekd
+IF bUpperCylinderSensor_OFF OR bUpperCylinderSensor_ON THEN
+	bUpperGriperBlocked							:=FALSE;
+END_IF
+
+IF bBottomCylinderSensor_OFF OR bBottomCylinderSensor_ON THEN
+	bBottomGriperBlocked						:=FALSE;
+END_IF
