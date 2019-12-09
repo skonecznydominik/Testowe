@@ -1,4 +1,4 @@
-MachineState							: MACHINE_MODE;
+	MachineState							: MACHINE_MODE;
 	rJogAcceleration						: REAL:=1000;
 	
 	rHomingAcceleration						: REAL:=1000;
@@ -7,9 +7,9 @@ MachineState							: MACHINE_MODE;
 	fbResetLampBlink						: BLINK;
 	
 	fbUpperAxisSetTorque					: MB_WriteRealParameter;
-	rUpperAxisTorqueCmd						: REAL:=100;
+	rUpperAxisTorqueCmd						: REAL:=20;
 	fbBottomAxisSetTorque					: MB_WriteRealParameter;
-	rBottomAxisTorqueCmd					: REAL:=100;
+	rBottomAxisTorqueCmd					: REAL:=20;
 	
 	fbUpperAxisCommandBlock					: MB_Command;
 	fbUpperAxisSetReferenceDistance			: MB_WriteRealParameter;
@@ -61,3 +61,8 @@ MachineState							: MACHINE_MODE;
 	fbGriperTestDleay						: TON;
 	tValveDelayGripperTest					: TIME:=T#1000MS;
 	fbRTrigGripperTest						: R_TRIG;
+	
+	fbRTrigBottomPositionSensor				: R_TRIG;
+	fbFTrigBottomPositionSensor				: F_TRIG;
+	fbRTrigUpperPositionSensor				: R_TRIG;
+	fbFTrigUpperPositionSensor				: F_TRIG;
