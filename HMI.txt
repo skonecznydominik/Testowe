@@ -6,7 +6,7 @@
 	
 	//Error and diagnostic
 	bGlobalError							: BOOL;
-	//bPLC_Error								: BOOL;
+	bPLC_Error								: BOOL;
 	bUpperAxisError							: BOOL;
 	bBottmAxisError							: BOOL;
 	rBottomAxisActualPosition				: REAL;
@@ -134,7 +134,7 @@
 	bOdstawDostawNoze						: BOOL;
 	bKrokAutoKrok42							: BOOL;
 	
-	//bResetButton							: BOOL;
+	bResetButton							: BOOL;
 	bGoToShopStop							: BOOL;
 	bMuscle_HMI								: BOOL;
 	bSupportKnifeActive						: BOOL;
