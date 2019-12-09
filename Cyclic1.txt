@@ -1,0 +1,196 @@
+bPLC_Error									:= ImcStatus.Diag.Error;
+bUpperAxisError								:= AxisData[UpperAxis.AxisNo].Axis_Error;
+bBottmAxisError								:= AxisData[BottomAxis.AxisNo].Axis_Error;
+
+
+IF NOT bEmergency_ON OR bPLC_Error OR bUpperAxisError OR bBottmAxisError THEN
+	bGlobalError								:=TRUE;
+ELSE
+	bGlobalError								:=FALSE;
+END_IF
+
+IF ImcStatus.Admin.ModeStatus_BB THEN
+	rBottomAxisActualPosition				:= AxisData[BottomAxis.AxisNo].rActualPosition_i;
+	rUpperAxisActualPosition				:= AxisData[UpperAxis.AxisNo].rActualPosition_i;
+END_IF
+
+ImcCtrl.Admin.ClearError					:=bResetButton;
+bResetPilz									:=bResetButton;
+IF bGlobalError THEN
+	fbResetLampBlink(
+						ENABLE:= TRUE, 
+						TIMELOW:= T#700MS, 
+						TIMEHIGH:= T#700MS, 
+						OUT=> bResetLamp);
+ELSE
+	fbResetLampBlink.ENABLE					:=FALSE;
+	bResetLamp								:=FALSE;
+END_IF
+
+
+
+
+
+/////   Working only when PLC is in BB mode
+IF ImcStatus.Admin.ModeStatus_BB THEN
+	
+	// Operating mode selecting
+	IF bGlobalError THEN
+		MachineState					:=MODE_ERROR;
+		
+	ELSIF bKnivesHomingMode AND NOT bKnivesManualMode AND NOT bKnivesAutoMode AND NOT bKnivesHomingKnivesMode AND NOT bGlobalError THEN
+		MachineState					:=MODE_HOMING;
+		
+	ELSIF bKnivesManualMode AND NOT bKnivesHomingMode AND NOT bKnivesAutoMode AND NOT bKnivesHomingKnivesMode AND NOT bGlobalError THEN
+		
+		MachineState					:=MODE_MANUAL;
+		
+	ELSIF bKnivesAutoMode AND NOT bKnivesHomingMode AND NOT bKnivesManualMode AND NOT bKnivesHomingKnivesMode AND NOT bGlobalError THEN
+		MachineState					:=MODE_AUTO;
+		
+	ELSIF bKnivesHomingKnivesMode AND NOT bKnivesHomingMode AND NOT bKnivesManualMode AND NOT bKnivesAutoMode AND NOT bGlobalError THEN
+		MachineState					:=MODE_KNIVESHOMING;
+		
+	ELSIF NOT bKnivesAutoMode AND NOT bKnivesHomingMode AND NOT bKnivesManualMode AND NOT bKnivesHomingKnivesMode AND NOT bGlobalError THEN
+		MachineState					:=MODE_OFF;
+	END_IF
+
+ELSE
+	MachineState						:=0;
+END_IF
+
+///////////////////////////
+//Signals with Mitsubishi
+//////////////////////////
+
+//Redy
+
+IF bRewinderEnable AND NOT(bGlobalError) AND bCoversClosed AND bSensorPlate THEN
+	bReady										:=TRUE;
+ELSE
+	bReady										:=FALSE;	
+END_IF
+
+// Knives Positioned
+IF bKrokAutoKrok42 THEN
+	bKnivesPositioned 							:=TRUE;
+ELSE
+	bKnivesPositioned 							:=FALSE;	
+END_IF
+// During Setting
+IF (bTrybDemoProcedure AND NOT(bKrokAutoKrok42)) OR bUpperKnivesReHomingProcedure OR bBottomKnivesReHomingProcedure OR bUpperKnivesNewHomingProcedure OR bBottomKnivesNewHomingProcedure OR bUpperKnivesAutoProcedure OR bBottomKnivesAutoProcedure THEN
+	bDuringSetting								:=TRUE;
+ELSE
+	bDuringSetting								:=FALSE;	
+END_IF
+
+
+// Changing TOrque limit bipolar when homing
+IF DV_Axis[UpperAxis.AxisNo].A_0_0038=rUpperAxisTorqueCmd THEN
+	fbUpperAxisSetTorque.Execute					:=FALSE;
+ELSE
+	fbUpperAxisSetTorque.Execute					:=TRUE;	
+END_IF
+fbUpperAxisSetTorque(
+						Execute:= , 
+						Done=> , 
+						Active=> , 
+						Error=> , 
+						ErrorID=> , 
+						ErrorIdent=> , 
+						ParameterNumber:= FP_A_0_0038, 
+						Value:= rUpperAxisTorqueCmd, 
+						Axis:= UpperAxis);
+						
+IF DV_Axis[BottomAxis.AxisNo].A_0_0038=rBottomAxisTorqueCmd THEN
+	fbBottomAxisSetTorque.Execute					:=FALSE;
+ELSE
+	fbBottomAxisSetTorque.Execute					:=TRUE;	
+END_IF
+fbBottomAxisSetTorque(
+						Execute:= , 
+						Done=> , 
+						Active=> , 
+						Error=> , 
+						ErrorID=> , 
+						ErrorIdent=> , 
+						ParameterNumber:= FP_A_0_0038, 
+						Value:= rBottomAxisTorqueCmd, 
+						Axis:= BottomAxis);
+						
+						
+						
+						
+/////////// 		Positive Stop Procedure processing
+fbUpperAxisCommandBlock(
+						Execute			:= , 
+						Done			=> , 
+						Active			=> , 
+						CommandAborted	=> , 
+						Error			=> , 
+						ErrorID			=> , 
+						ErrorIdent		=> , 
+						Cancel			:= , 
+						KeepActive		:= , 
+						ParameterNumber	:= FP_S_0_0149, 
+						CommandExecuted	=> , 
+						CommandStatus	=> , 
+						Axis			:= UpperAxis);
+
+fbBottomAxisCommandBlock(
+						Execute			:= , 
+						Done			=> , 
+						Active			=> , 
+						CommandAborted	=> , 
+						Error			=> , 
+						ErrorID			=> , 
+						ErrorIdent		=> , 
+						Cancel			:= , 
+						KeepActive		:= , 
+						ParameterNumber	:= FP_S_0_0149, 
+						CommandExecuted	=> , 
+						CommandStatus	=> , 
+						Axis			:= BottomAxis);						
+						
+//  Setting reference distance
+fbUpperAxisReadReferenceDistance(
+								Enable			:= , 
+								Done			=> , 
+								Active			=> , 
+								Error			=> , 
+								ErrorID			=> , 
+								ErrorIdent		=> , 
+								ParameterNumber	:= FP_S_0_0052, 
+								Value			=> , 
+								Axis			:= UpperAxis);
+fbUpperAxisSetReferenceDistance(
+								Execute			:= , 
+								Done			=> , 
+								Active			=> , 
+								Error			=> , 
+								ErrorID			=> , 
+								ErrorIdent		=> , 
+								ParameterNumber	:= FP_S_0_0052, 
+								Value			:= rUpperAxisReferenceDistance, 
+								Axis			:= UpperAxis);				
+
+fbBottomAxisReadReferenceDistance(
+								Enable			:= , 
+								Done			=> , 
+								Active			=> , 
+								Error			=> , 
+								ErrorID			=> , 
+								ErrorIdent		=> , 
+								ParameterNumber	:= FP_S_0_0052, 
+								Value			=> , 
+								Axis			:= BottomAxis);
+fbBottomAxisSetReferenceDistance(
+								Execute			:= , 
+								Done			=> , 
+								Active			=> , 
+								Error			=> , 
+								ErrorID			=> , 
+								ErrorIdent		=> , 
+								ParameterNumber	:= FP_S_0_0052, 
+								Value			:= rBottomAxisReferenceDistance, 
+								Axis			:= BottomAxis);
