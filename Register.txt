@@ -1,0 +1,194 @@
+// define Touchprobe location
+stTouchProbeDieCutter.CntrlNo 						:= LOCAL_CNTRL;
+stTouchProbeDieCutter.TouchProbeNo 					:= TOUCHPROBE_DRIVE_1;
+
+IF NOT bHMIDieCutterFullRotation THEN
+	fbInitTouchProbe.ExpectWindowPosEdgeMode 		:= EXPECT_WINDOW_ABS;
+	fbInitTouchProbe.ExpectWindowPosEdgeStart 		:= 0;
+	fbInitTouchProbe.ExpectWindowPosEdgeEnd 		:= (360.0 * (rFormatLenght / (rDieCutterCirc*rDistortionDieCutter)));
+END_IF
+fbInitTouchProbe.PositionEvalMode 					:= POSITION_POS_EDGE;
+fbInitTouchProbe.ExecutionMode 						:= CONTINUOUS;
+fbInitTouchProbe.ProbeData 							:= TP_ACT_POS_FEEDBACK1;
+
+
+
+IF bRegisterControllerON AND ImcStatus.Admin.ModeStatus_BB THEN
+	fbInitTouchProbe.Execute							:=TRUE;
+ELSE
+	fbInitTouchProbe.Execute							:=FALSE;
+END_IF
+
+
+
+
+fbInitTouchProbe(
+	Axis							:= DieCutter, 
+	TouchProbe						:= stTouchProbeDieCutter, 
+	Execute							:= , 
+	ProbeModule						:= , 
+	ExecutionMode					:= , 
+	ProbeInput						:= , 
+	ExpectWindowPosEdgeMode			:= , 
+	ExpectWindowNegEdgeMode			:= , 
+	ExpectWindowPosEdgeStart		:= , 
+	ExpectWindowPosEdgeEnd			:= , 
+	ExpectWindowNegEdgeStart		:= , 
+	ExpectWindowNegEdgeEnd			:= , 
+	ExpectWindowPosEdgeSetPoint		:= , 
+	ExpectWindowNegEdgeSetPoint		:= , 
+	MarkerFailureEnable				:= TRUE, 
+	MaxNumberOfMarkerFailure		:= , 
+	Interpolation					:= , 
+	TimeStampEnable					:= , 
+	DeadTimePosEdge					:= , 
+	DeadTimeNegEdge					:= , 
+	ProbeData						:= , 
+	PositionEvalMode				:= , 
+	DiffEvalMode					:= , 
+	Done							=> , 
+	Active							=> , 
+	Error							=> , 
+	ErrorID							=> , 
+	ErrorIdent						=> );
+
+	
+	
+IF fbInitTouchProbe.Done THEN
+	fbTouchProbeContinous.Enable		:=TRUE;
+ELSE
+	fbTouchProbeContinous.Enable		:=FALSE;
+END_IF
+	
+	
+fbTouchProbeContinous(
+	Axis							:= DieCutter, 
+	TouchProbe						:= stTouchProbeDieCutter, 
+	Enable							:= , 
+	InOperation						=> bTouchProbeContinousInOp, 
+	CommandAborted					=> , 
+	Error							=> , 
+	ErrorID							=> , 
+	ErrorIdent						=> , 
+	DetectedPosEdge					=> uiPosEdgeCnt, 
+	DetectedNegEdge					=> , 
+	RecordedPositionPosEdge			=> rRecordedPosition, 
+	RecordedPositionNegEdge			=> , 
+	PositionDifference				=> , 
+	DetectedPositionDifference		=> , 
+	MissingMarksPosEdge				=> uiMissedMarksCnt, 
+	MissingMarksNegEdge				=> , 
+	TimeStampPosEdge				=> , 
+	TimeStampNegEdge				=> );
+	
+	
+IF bTouchProbeContinousInOp	THEN
+	fbRegisterControllerType04.Enable		:=TRUE;
+ELSE
+	fbRegisterControllerType04.Enable		:=FALSE;
+END_IF
+
+fbRegisterControllerType04(
+	Enable							:= , 
+	Pause							:= bRegisterPause, 
+	Preset							:= , 
+	Step							:= uiPosEdgeCnt, 
+	DisableCyclicWrites				:= TRUE, 
+	PresetValue						:= 0,
+	SetpointLock					:= bSetpointLockRegisterControl, 
+	ClearMeasValMem					:= , 
+	ControlPolarity					:= TRUE, 
+	ControlledValueIDN				:= FP_A_0_2610, 
+	PControl						:= rPgain, 
+	IControl						:= 0, 
+	TControl						:= , 
+	ModuloValue						:= 360, 
+	HighLimit						:= rHighLimitRegi, 
+	LowLimit						:= rLowLimitRegi, 
+	CorrectionMode					:= CORR_ABS, 
+	CorrectionStart					:= (360.0 * rFormatLenght / (rDieCutterCirc*rDistortionDieCutter)), 
+	CorrectionEnd					:= 358, 
+	RecordedPosition				:= rRecordedPosition, 
+	ResponseCurve					:= , 
+	ProbeDistance					:= , 
+	MissedMarksCnt					:= uiMissedMarksCnt, 
+	MarkGating						:= , 
+	InOperation						=> bRegisterControllerInOp, 
+	Error							=> , 
+	ErrorID							=> , 
+	ErrorIdent						=> , 
+	InPause							=> , 
+	PresetAck						=> , 
+	ActStep							=> , 
+	SetpointLockAck					=> , 
+	ClearMeasValMemAck				=> , 
+	HighLimitActive					=> , 
+	LowLimitActive					=> , 
+	ControlValue					=> wyjscieZRegistra2, 
+	CurrentValue					=> , 
+	Deviation						=> , 
+	ParameterControlValue			=> rControlValueRegisterController, 
+	Setpoint						:= rRegisterSetpoint, 
+	ControlledAxis					:= Infeed23, 
+	MeasuredAxis					:= DieCutter);
+	
+	
+IF bHMIDieCutterFullRotation THEN
+	
+
+	IF rRegisterSetpointHMI<>rRegisterSetpointHMI_old THEN
+		rRegisterSetpoint								:= (rRegisterSetpointHMI/rDieCutterCirc)*360;
+		rRegisterSetpointHMI_old						:= rRegisterSetpointHMI;
+	END_IF
+		
+	rRegisterSetpointHMI								:= ((rRegisterSetpoint/360)*(rDieCutterCirc));
+END_IF
+
+IF fbRegisterControllerType04.InOperation AND NOT bMachineStartup THEN
+	DV_Axis[Infeed23.AxisNo].A_0_2610				:=(rControlValueRegisterController);			////ZMIANA!
+	ParameterResetTimer(IN:=FALSE, PT:=T#4S);
+ELSE		
+		ParameterResetTimer(IN:=TRUE, PT:=T#50MS);
+		IF ParameterResetTimer.Q THEN
+			DV_Axis[Infeed23.AxisNo].A_0_2610			:=0;
+		END_IF	
+	
+END_IF
+wyjscieZRegistra					:=(rControlValueRegisterController);							////Pomocniczo!!
+
+
+
+rRegisterDeviation					:=((fbRegisterControllerType04.Deviation*1.6170169)+fbRegisterControllerType04.ControlValue);
+
+IF bSetpointLockRegisterControl (*OR bRegisterFlexoDisableWindow*) THEN
+	fbWriteExpectWindow.ExpectWindowPosEdgeMode				:= EXPECT_WINDOW_DISABLED;
+ELSIF (bSetpointLockRegisterControl=FALSE) AND bHMIDieCutterFullRotation THEN
+	fbWriteExpectWindow.ExpectWindowPosEdgeMode				:= EXPECT_WINDOW_REL;
+	fbWriteExpectWindow.ExpectWindowPosEdgeSetPoint			:= rRegisterSetpoint;
+	IF rMarkExpectationWindow<rDieCutterCirc THEN
+		fbWriteExpectWindow.ExpectWindowPosEdgeStart				:= (((rMarkExpectationWindow/2)/rDieCutterCirc)*360);
+		fbWriteExpectWindow.ExpectWindowPosEdgeEnd					:= (((rMarkExpectationWindow/2)/rDieCutterCirc)*360);
+	ELSE
+		rMarkExpectationWindow										:= rDieCutterCirc;
+		fbWriteExpectWindow.ExpectWindowPosEdgeStart				:= (((rMarkExpectationWindow/2)/rDieCutterCirc)*360);
+		fbWriteExpectWindow.ExpectWindowPosEdgeEnd					:= (((rMarkExpectationWindow/2)/rDieCutterCirc)*360);
+	END_IF
+ELSE
+	fbWriteExpectWindow.ExpectWindowPosEdgeMode 		:= EXPECT_WINDOW_ABS;
+	fbWriteExpectWindow.ExpectWindowPosEdgeStart 		:= 0;
+	fbWriteExpectWindow.ExpectWindowPosEdgeEnd 			:= (360.0 * (rFormatLenght / (rDieCutterCirc*rDistortionDieCutter)));
+END_IF
+
+fbWriteExpectWindow(
+			Axis						:= DieCutter, 
+			TouchProbe					:= stTouchProbeDieCutter, 
+			Enable						:= fbRegisterControllerType04.InOperation, 
+			ExpectWindowPosEdgeMode		:= , 
+			ExpectWindowPosEdgeStart	:= , 
+			ExpectWindowPosEdgeEnd		:= , 
+			ExpectWindowPosEdgeSetPoint	:= , 
+			InOperation					=> , 
+			CommandAborted				=> , 
+			Error						=> , 
+			ErrorID						=> , 
+			ErrorIdent					=> );
