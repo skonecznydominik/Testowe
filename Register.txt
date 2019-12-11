@@ -88,6 +88,16 @@ ELSE
 	fbRegisterControllerType04.Enable		:=FALSE;
 END_IF
 
+IF NOT bHMIDieCutterFullRotation THEN
+	fbRegisterControllerType04.CorrectionMode			:= CORR_ABS;
+	fbRegisterControllerType04.CorrectionStart			:= (360.0 * rFormatLenght / (rDieCutterCirc*rDistortionDieCutter));
+	fbRegisterControllerType04.CorrectionEnd			:= 358;
+ELSE
+	fbRegisterControllerType04.CorrectionMode			:= CORR_REL;
+	fbRegisterControllerType04.CorrectionStart			:= 25;
+	fbRegisterControllerType04.CorrectionEnd			:= 335;
+END_IF
+
 fbRegisterControllerType04(
 	Enable							:= , 
 	Pause							:= bRegisterPause, 
@@ -105,9 +115,9 @@ fbRegisterControllerType04(
 	ModuloValue						:= 360, 
 	HighLimit						:= rHighLimitRegi, 
 	LowLimit						:= rLowLimitRegi, 
-	CorrectionMode					:= CORR_ABS, 
-	CorrectionStart					:= (360.0 * rFormatLenght / (rDieCutterCirc*rDistortionDieCutter)), 
-	CorrectionEnd					:= 358, 
+	CorrectionMode					:= , 
+	CorrectionStart					:= , 
+	CorrectionEnd					:= , 
 	RecordedPosition				:= rRecordedPosition, 
 	ResponseCurve					:= , 
 	ProbeDistance					:= , 
