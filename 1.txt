@@ -1325,7 +1325,7 @@ IF bTrybDemoProcedure THEN
 			END_IF	
 		
 		20:
-			///bUpperKnivesAutoStart					:=TRUE;
+			//bUpperKnivesAutoStart					:=TRUE;
 			bBottomKnivesAutoStart					:=TRUE;
 			bMuscle									:=TRUE;
 			uiTrybDemoStepCounter					:=22;
@@ -1338,8 +1338,7 @@ IF bTrybDemoProcedure THEN
 					bStopMoveNewHommingNeed						:=TRUE;
 					uiTrybDemoStepCounter						:=0;					
 			END_IF
-
-			
+	
 		22:
 			//bUpperKnivesAutoStart					:=FALSE;
 			bBottomKnivesAutoStart					:=FALSE;
@@ -1396,7 +1395,6 @@ IF bTrybDemoProcedure THEN
 				uiTrybDemoStepCounter							:=35;				
 			END_IF	
 					
-
 			//Stop Procedure
 			IF bTrybDemoStop THEN
 					bTrybDemoProcedure							:=FALSE;
