@@ -14,14 +14,14 @@ rEndOfCuttingAngle						:=((rFormatLenght/(rDieCutterCirc*rDistortionDieCutter))
 // Trigger for counter
 //-----------------------------
 IF 	NOT bHMIDieCutterFullRotation THEN
-	IF AxisData[DieCutter.AxisNo].rActualPosition_i > rEndOfCuttingAngle 
-			AND AxisData[DieCutter.AxisNo].rActualPosition_i < (rEndOfCuttingAngle+10) THEN
+	IF AxisData[DieCutter.AxisNo].rActualPosition_i > rEndOfCuttingAngle 						
+			AND AxisData[DieCutter.AxisNo].rActualPosition_i < 360 THEN		// zmiana  bylo (rEndOfCuttingAngle+10.0)
 		bOneRevFinder					:=TRUE;
 	ELSE
 		bOneRevFinder					:=FALSE;	
 	END_IF
 ELSE
-	IF AxisData[DieCutter.AxisNo].rActualPosition_i > 353 
+	IF AxisData[DieCutter.AxisNo].rActualPosition_i > 350 						/// zmiana bylo 353
 		AND AxisData[DieCutter.AxisNo].rActualPosition_i < 360 THEN
 		bOneRevFinder					:=TRUE;
 	ELSE
