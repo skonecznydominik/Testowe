@@ -1,0 +1,118 @@
+
+
+//-----------------------------
+// Rising Edge of OneRevolution sensor
+//-----------------------------
+OneRevFinder(CLK:= bOneRevFinder); 
+bOneRevFinder_R_TRIG 					:= OneRevFinder.Q;
+
+
+rEndOfCuttingAngle						:=((rFormatLenght/(rDieCutterCirc*rDistortionDieCutter))*360);
+
+
+//-----------------------------
+// Trigger for counter
+//-----------------------------
+IF 	NOT bHMIDieCutterFullRotation THEN
+	IF AxisData[DieCutter.AxisNo].rActualPosition_i > rEndOfCuttingAngle 
+			AND AxisData[DieCutter.AxisNo].rActualPosition_i < (rEndOfCuttingAngle+10) THEN
+		bOneRevFinder					:=TRUE;
+	ELSE
+		bOneRevFinder					:=FALSE;	
+	END_IF
+ELSE
+	IF AxisData[DieCutter.AxisNo].rActualPosition_i > 353 
+		AND AxisData[DieCutter.AxisNo].rActualPosition_i < 360 THEN
+		bOneRevFinder					:=TRUE;
+	ELSE
+		bOneRevFinder					:=FALSE;	
+	END_IF
+END_IF
+
+//-----------------------------
+// Revolution counter
+//-----------------------------
+RevolutionCounter(CU:= bOneRevFinder_R_TRIG, RESET:=bCounterReset , PV:= iRevCounterSetpoint); 
+bRevCounterOutput 						:= RevolutionCounter.Q; 
+iRevCounterActualVal 					:= RevolutionCounter.CV;
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//					LABEL COUNTER SENSOR
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////
+/////////
+/////////		Label lenght determination
+/////////
+//////////////////////////////////////////////
+
+IF bMachineStartupOK AND (AxisData[vMachineMaster.AxisNo].rActualVelocity_i>0)  THEN
+	bLabelCounterStart						:= TRUE;
+	bLabelCounterStop						:= FALSE;
+ELSE
+	bLabelCounterStart						:= FALSE;
+	bLabelCounterStop						:= TRUE;
+END_IF
+
+
+MachineRunning_R_TRIG(CLK:=bMachineIsRunning);
+bMachineRunning_R_TRIG:=MachineRunning_R_TRIG.Q;
+
+IF bMachineRunning_R_TRIG THEN
+	bFirstLabelsCounting					:= TRUE;
+	fbLabelLenghtCheck.Enable				:= TRUE;
+	udiOldValueLabelCounter					:= udiLabelCounterActValue;
+	iFirstLabelsCounter						:= 0;
+END_IF
+
+fbLabelLenghtCheck(
+					Enable					:= , 
+					TotalDistance			:= 4294967295, 
+					InOperation				=> , 
+					Error					=> , 
+					ErrorID					=> , 
+					ErrorIdent				=> , 
+					DistanceReached			=> , 
+					AccumulatedDistance		=> , 
+					Axis					:= vMachineMaster);
+
+					
+IF bFirstLabelsCounting AND (AxisData[vMachineMaster.AxisNo].rActualVelocity_i>0) THEN
+	
+	IF (udiLabelCounterActValue <> udiOldValueLabelCounter) AND bMachineIsRunning THEN
+		bNewLabelDetected						:= TRUE;
+	ELSE
+		bNewLabelDetected						:= FALSE;
+	END_IF
+	
+	udiOldValueLabelCounter						:= udiLabelCounterActValue;
+
+	IF bNewLabelDetected THEN
+		iFirstLabelsCounter						:= iFirstLabelsCounter+1;
+	END_IF
+	
+	IF bNewLabelDetected AND (iFirstLabelsCounter=2) THEN
+		rFirstProbeDistance						:= fbLabelLenghtCheck.AccumulatedDistance;
+	END_IF
+	
+	IF bNewLabelDetected AND (iFirstLabelsCounter=(2+uiLabelNumberForLenghtDetection)) THEN
+		rSecondProbeDistance					:= fbLabelLenghtCheck.AccumulatedDistance;
+	END_IF
+	
+	IF iFirstLabelsCounter=(2+uiLabelNumberForLenghtDetection) THEN
+		rNipTraveledDistance					:= (rSecondProbeDistance-rFirstProbeDistance)/uiLabelNumberForLenghtDetection;
+		
+		bFirstLabelsCounting					:= FALSE;
+		fbLabelLenghtCheck.Enable				:= FALSE;
+		bNewLabelDetected						:= FALSE;
+		rLabelLenghtFromSensor							:= (rNipTraveledDistance/360)*1000;
+	END_IF
+END_IF
