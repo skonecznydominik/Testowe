@@ -31,6 +31,7 @@ MatrixFriction.MaxTorque						:= MatrixFrictionMaxTorque;			//13.5 dla 650 obr m
 MatrixFriction.MinTorque						:= MatrixFrictionMinTorque;			//5
 MatrixFriction.MinTorqueVelocity				:= MatrixFrictionMinTorqueVelocity;	//0.7
 
+
 IF  NOT bHMIMatrixButton THEN
 	fbMatrixTensionCtrlType02.SetpointOpMode		:= rMatrixForceCommand;
 	fbMatrixTensionCtrlType02.SetpointStandstill	:= rMatrixForceCommand;
@@ -38,6 +39,7 @@ ELSE
 	fbMatrixTensionCtrlType02.SetpointOpMode		:= 1;
 	fbMatrixTensionCtrlType02.SetpointStandstill	:= 1;
 END_IF
+
 
 fbMatrixTensionCtrlType02(
 			Enable					:= bMatrixEnable, 
@@ -48,8 +50,8 @@ fbMatrixTensionCtrlType02(
 			PauseDiameter			:= bMatrixPauseDiameter, 
 			PresetDiameter			:= bMatrixPresetDiameter, 
 			TensionMode				:= CONST_WEB_VEL, 
-			SetpointStandstill		:= rMatrixForceCommand, 
-			SetpointOpMode			:= rMatrixForceCommand, 
+			SetpointStandstill		:= , 
+			SetpointOpMode			:= , 
 			TensionSpeed			:= rMatrixTensionSpeed, 
 			ActTorqueFilter			:= tMatrixActTorqueFilter, 
 			AccelTorqueFilter		:= tMatrixAccelTorqueFilter, 
