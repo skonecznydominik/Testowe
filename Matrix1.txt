@@ -1,0 +1,116 @@
+//		Matrix Diameter structure declaration
+MatrixDiameter.AverageValue						:= MatrixDiameterAverageValue;
+MatrixDiameter.CalcRange						:= MatrixDiameterCalcRange;
+MatrixDiameter.CoreVal							:= rCoreDiameter;
+MatrixDiameter.Density							:= MatrixDiameterDensity;
+MatrixDiameter.DiamCalcMode						:= CALC_DIAM_MANUAL;		// FIRST_REV_AUTO_CALC;
+MatrixDiameter.DiamSource						:= FALSE;
+MatrixDiameter.HighLimit						:= MatrixDiameterHighLimit;
+MatrixDiameter.LowLimit							:= MatrixDiameterLowLimit;
+MatrixDiameter.MaxDiameter						:= MatrixDiameterMaxDiameter;
+MatrixDiameter.MeasuredVal						:= MatrixDiameterMeasuredVal;
+MatrixDiameter.MechanicInertia					:= MatrixDiameterMechanicInertia;
+MatrixDiameter.MinDiameter						:= MatrixDiameterMinDiameter;
+MatrixDiameter.PivotVelocity					:= MatrixDiameterPivotVelocity;
+MatrixDiameter.PresetVal						:= rCoreDiameterMatrix;            //MatrixDiameterPresetVal
+MatrixDiameter.RepeatLength						:= rInfeedCirc;
+MatrixDiameter.WebWidth							:= MatrixDiameterWebWidth;
+
+//		Matrix TensionCtrl structure declaration
+//MatrixTensionCtrl.FeedbackVal					:= MatrixTensionCtrlFeedbackVal
+MatrixTensionCtrl.LowLimit						:= MatrixTensionCtrlLowLimit;
+MatrixTensionCtrl.HighLimit						:= MatrixTensionCtrlHighLimit;
+MatrixTensionCtrl.PControl						:= MatrixTensionCtrlPControl;
+MatrixTensionCtrl.IControl						:= MatrixTensionCtrlIControl;
+MatrixTensionCtrl.PreControlWeighting			:= MatrixTensionCtrlPreControlWeighting;
+
+
+//		Matrix Friction structure declaration
+MatrixFriction.StandstillTorque					:= MatrixFrictionStandstillTorque;	//6.4
+MatrixFriction.MaxTorque						:= MatrixFrictionMaxTorque;			//13.5 dla 650 obr max
+MatrixFriction.MinTorque						:= MatrixFrictionMinTorque;			//5
+MatrixFriction.MinTorqueVelocity				:= MatrixFrictionMinTorqueVelocity;	//0.7
+
+IF  NOT bHMIMatrixButton THEN
+	fbMatrixTensionCtrlType02.SetpointOpMode		:= rMatrixForceCommand;
+	fbMatrixTensionCtrlType02.SetpointStandstill	:= rMatrixForceCommand;
+ELSE
+	fbMatrixTensionCtrlType02.SetpointOpMode		:= 1;
+	fbMatrixTensionCtrlType02.SetpointStandstill	:= 1;
+END_IF
+
+fbMatrixTensionCtrlType02(
+			Enable					:= bMatrixEnable, 
+			Pause					:= bMatrixPause, 
+			DisableCyclicWrites		:= bMatrixDisableCyclicWrites, 
+			WindCtrlType			:= OPEN_LOOP, 
+			WindDirection			:= REWIND, 
+			PauseDiameter			:= bMatrixPauseDiameter, 
+			PresetDiameter			:= bMatrixPresetDiameter, 
+			TensionMode				:= CONST_WEB_VEL, 
+			SetpointStandstill		:= rMatrixForceCommand, 
+			SetpointOpMode			:= rMatrixForceCommand, 
+			TensionSpeed			:= rMatrixTensionSpeed, 
+			ActTorqueFilter			:= tMatrixActTorqueFilter, 
+			AccelTorqueFilter		:= tMatrixAccelTorqueFilter, 
+			DefaultTorqueLimit		:= rMatrixDefaultTorqueLimit, 
+			WindowTension			:= rMatrixWindowTension, 
+			MinTension				:= rMatrixMinTension, 
+			MaxTension				:= rMatrixMaxTension, 
+			Diameter				:= MatrixDiameter, 
+			TensionCtrl				:= MatrixTensionCtrl, 
+			Friction				:= MatrixFriction, 
+			InOperation				=> bMatrixInOperation, 
+			Error					=> bMatrixFBError, 
+			ErrorID					=> , 
+			ErrorIdent				=> , 
+			InPause					=> bMatrixInPause, 
+			PresetDiamAck			=> bMatrixPresetDiamAck, 
+			InPauseDiam				=> bMatrixInPauseDiam, 
+			MinAvDiamAchieved		=> bMatrixMinAvDiamAchieved, 
+			MaxAvDiamAchieved		=> bMatrixMaxAvDiamAchieved, 
+			HighLimitDiamActive		=> bMatrixHighLimitDiamActive, 
+			LowLimitDiamActive		=> bMatrixLowLimitDiamActive, 
+			DiameterEngaged			=> bMatrixDiameterEngaged, 
+			HighLimitTensActive		=> bMatrixHighLimitTensActive, 
+			LowLimitTensActive		=> bMatrixLowLimitTensActive, 
+			TensionInWindow			=> bMatrixTensionInWindow, 
+			MinTensionAchieved		=> bMatrixMinTensionAchieved, 
+			MaxTensionAchieved		=> bMatrixMaxTensionAchieved, 
+			CurrentDiameter			=> rMatrixCurrentDiameter, 
+			GearRatioFineAdjust		=> rMatrixGearRatioFineAdjust, 
+			CurrentInertia			=> rMatrixCurrentInertia, 
+			SpeedOffset				=> rMatrixSpeedOffset, 
+			TorqueLimitBipolar		=> rMatrixTorqueLimitBipolar, 
+			WindTensDiag			=> MatrixWindTensDiag, 
+			Master					:= Infeed23, 
+			Slave					:= Matrix);
+
+
+
+//Ta procedura moze sie zmienic jesli wybierzeemy mastera jako Vmatsre Axis			
+IF 	bMatrixInOperation THEN
+	DV_Axis[Matrix.AxisNo].A_0_2605						:=rMatrixGearRatioFineAdjust;
+	DV_Axis[Matrix.AxisNo].A_0_2615						:=rMatrixSpeedOffset;
+ELSE	
+	DV_Axis[Matrix.AxisNo].A_0_2605						:=0;
+	DV_Axis[Matrix.AxisNo].A_0_2615						:=0;
+END_IF
+
+
+(*
+// Tension adjustment when small core 
+IF rWinderCurrentDiameter < 55 THEN
+	IF fbWinderTaperPrifile.TaperSetpoint < ((((29-55)/(80-40))*(rWinderCurrentDiameter-40))+55) THEN
+		fbWinderTensionCtrlType02.SetpointOpMode				:=((((29-55)/(80-40))*(rWinderCurrentDiameter-40))+55);
+		fbWinderTensionCtrlType02.SetpointStandstill			:=((((29-55)/(80-40))*(rWinderCurrentDiameter-40))+55);
+	ELSE
+		fbWinderTensionCtrlType02.SetpointOpMode				:=fbWinderTaperPrifile.TaperSetpoint;
+		fbWinderTensionCtrlType02.SetpointStandstill			:=fbWinderTaperPrifile.TaperSetpoint;
+	END_IF
+ELSE
+	fbWinderTensionCtrlType02.SetpointOpMode		:=fbWinderTaperPrifile.TaperSetpoint;
+	fbWinderTensionCtrlType02.SetpointStandstill	:=fbWinderTaperPrifile.TaperSetpoint;
+END_IF
+
+*)
